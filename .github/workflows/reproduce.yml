@@ -4,6 +4,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: rand-hie-reproduce-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -44,7 +48,7 @@ jobs:
       - name: Verify integrity and model tests
         run: pytest -q
 
-      - name: Reproduce Econometrics, Machine Learning and all six figures
+      - name: Reproduce Econometrics, Machine Learning and all eight figures
         run: python -m health_econ.cli
 
       - name: Preserve peer-reviewable data and results as workflow artifacts
@@ -67,6 +71,8 @@ jobs:
           git add data/rand_hie_statsmodels_sample.csv results/ figures/
           if ! git diff --cached --quiet; then
             git commit -m "Publish reproducible real RAND data and empirical results [skip ci]"
+            git fetch origin main
+            git rebase origin/main
             git push origin HEAD:main
           else
             echo "No changes to verified research outputs"
