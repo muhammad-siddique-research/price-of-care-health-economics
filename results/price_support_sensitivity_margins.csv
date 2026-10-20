@@ -1,0 +1,13 @@
+burden_third,coinsurance_pct,standardization_n,nb2_log_price_adjusted_mean,nb2_categorical_price_adjusted_mean,scope
+Low,0,4998,3.0074593802476928,2.6334680869354163,descriptive standardized model outputs; not causal
+Low,25,4998,1.8319284333874388,2.096918648941773,descriptive standardized model outputs; not causal
+Low,50,4998,1.6535778364085683,2.0349879557179964,descriptive standardized model outputs; not causal
+Low,95,4998,1.5020088978765374,1.562779423473661,descriptive standardized model outputs; not causal
+Middle,0,5109,3.6450616188925538,3.1829831047776502,descriptive standardized model outputs; not causal
+Middle,25,5109,2.317846085536981,2.6559254310538023,descriptive standardized model outputs; not causal
+Middle,50,5109,2.1107094048630137,2.5401694978716565,descriptive standardized model outputs; not causal
+Middle,95,5109,1.933123454058615,2.0032858993999425,descriptive standardized model outputs; not causal
+High,0,4834,5.065978131875339,4.406674173113322,descriptive standardized model outputs; not causal
+High,25,4834,3.4803505071994474,4.004079289527307,descriptive standardized model outputs; not causal
+High,50,4834,3.2221934962262293,3.7265305628034557,descriptive standardized model outputs; not causal
+High,95,4834,2.997830189725208,3.0903037489799314,descriptive standardized model outputs; not causal
