@@ -1,0 +1,37 @@
+{
+  "poisson_base": {
+    "n": 20190,
+    "aic": 124859.17712889783,
+    "converged": true,
+    "pearson_dispersion": 6.279175321487605,
+    "variance_assumption": "Poisson: variance equals conditional mean",
+    "mean_predicted_count": 2.8604259534424132,
+    "observed_zero_fraction": 0.31243189697870233,
+    "expected_model_zero_fraction": 0.08310987889207723
+  },
+  "poisson_interaction": {
+    "n": 20190,
+    "aic": 124798.9222233128,
+    "converged": true,
+    "pearson_dispersion": 6.289215766284306,
+    "variance_assumption": "Poisson: variance equals conditional mean",
+    "mean_predicted_count": 2.8604259534424634,
+    "observed_zero_fraction": 0.31243189697870233,
+    "expected_model_zero_fraction": 0.08417437104066347
+  },
+  "nb2_interaction": {
+    "n": 20190,
+    "aic": 86788.52349402843,
+    "converged": true,
+    "pearson_dispersion": 1.421181710186528,
+    "variance_assumption": "NB2: mean + alpha * mean_squared",
+    "mean_predicted_count": 2.875489231462126,
+    "observed_zero_fraction": 0.31243189697870233,
+    "expected_model_zero_fraction": 0.31968792958948206
+  },
+  "any_visit_logit": {
+    "n": 20190,
+    "aic": 23784.87598956279,
+    "converged": true
+  }
+}

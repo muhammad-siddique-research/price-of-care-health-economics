@@ -1,0 +1,32 @@
+{
+  "observations": 20190,
+  "variables_original": [
+    "mdvis",
+    "lncoins",
+    "idp",
+    "lpi",
+    "fmde",
+    "physlm",
+    "disea",
+    "hlthg",
+    "hlthf",
+    "hlthp"
+  ],
+  "missing_values_total": 0,
+  "identical_full_rows_retained": 11065,
+  "visit_mean": 2.860425953442298,
+  "visit_variance": 20.289300130605795,
+  "zero_visit_share": 0.31243189697870233,
+  "positive_visit_share": 0.6875681030212977,
+  "max_visits": 77,
+  "unique_costsharing_levels": [
+    0,
+    25,
+    50,
+    95,
+    100
+  ],
+  "disea_noninteger_records": 18396,
+  "participant_identifiers_available": false,
+  "experimental_assignment_identifiers_available": false
+}

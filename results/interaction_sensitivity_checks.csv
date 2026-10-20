@@ -1,0 +1,7 @@
+design,model,n,interaction_beta,interaction_se,interaction_p_exploratory,aic,converged,note
+full_archived_sample,poisson_hc3,20190,0.014064081480066168,0.004806439466358811,0.003432500081053734,124798.9222233128,True,Independent-observation standard errors; unknown original participant clustering and assignment; not causal.
+full_archived_sample,nb2_mle,20190,0.007884791985901026,0.004713207922484946,0.09434420780034754,86788.52349402843,True,Independent-observation standard errors; unknown original participant clustering and assignment; not causal.
+omit_top_1pct_utilization,poisson_hc3,20007,0.013130187119878494,0.0038972024007548796,0.0007540546208396947,106901.84874227035,True,Independent-observation standard errors; unknown original participant clustering and assignment; not causal.
+omit_top_1pct_utilization,nb2_mle,20007,0.00842528273675913,0.004545577717987447,0.06380901126198106,83276.85054723544,True,Independent-observation standard errors; unknown original participant clustering and assignment; not causal.
+non_idp_plans_only,poisson_hc3,14941,0.021356099916310784,0.005551456072377377,0.00011960387073246749,93316.8427315365,True,Independent-observation standard errors; unknown original participant clustering and assignment; not causal.
+non_idp_plans_only,nb2_mle,14941,0.016416179290462483,0.00535157521256162,0.0021582745787917684,65508.92924175924,True,Independent-observation standard errors; unknown original participant clustering and assignment; not causal.

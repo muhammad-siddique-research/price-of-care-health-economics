@@ -1,0 +1,9 @@
+{
+  "seed": 2026,
+  "train_n": 14881,
+  "test_n": 5309,
+  "split_unit": "Identical-covariate-pattern groups",
+  "participant_id_available": false,
+  "caution": "Group split is NOT verified patient-level holdout, and patterns may be correlated across groups. No randomization identifiers or experiment time markers were available.",
+  "n_unique_fingerprints": 2760
+}
