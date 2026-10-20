@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use the software, please cite the repository and its original data source."
+type: software
+title: "The Price of Care: A Reproducible Health Economics Methods Portfolio"
+authors:
+  - family-names: Siddique
+    given-names: Muhammad
+repository-code: "https://github.com/muhammad-siddique-research/price-of-care-health-economics"
+url: "https://github.com/muhammad-siddique-research/price-of-care-health-economics"
+version: 0.2.0
+date-released: "2026-10-20"
+license: MIT
+keywords:
+  - health economics
+  - count econometrics
+  - hurdle models
+  - RAND Health Insurance Experiment
+  - reproducible computational research
+abstract: "Independent analysis of an authentic historical RAND HIE extract using descriptive Poisson, NB2, hurdle count models, plan support sensitivity, and predictive Machine Learning; not an identified trial-effect reanalysis."
