@@ -10,6 +10,8 @@ from .econometrics import (
 from .ml import evaluate_ml
 from .plots import plot_descriptive, plot_heterogeneity, plot_margins, plot_ml
 from .robustness import check_sensitivity
+from .hurdle import estimate_hurdle_and_margins, plot_hurdle_margins
+from .functional_form import analyze_functional_form
 
 
 def run(data_path: Path, provenance_path: Path, results: Path, figs: Path):
@@ -24,6 +26,9 @@ def run(data_path: Path, provenance_path: Path, results: Path, figs: Path):
     strata = descriptive_table(df)
     comparison, importance, calibration, split = evaluate_ml(df)
     sensitivity = check_sensitivity(df)
+    hurdle_summary, hurdle_margins = estimate_hurdle_and_margins(df, results)
+    function_table, support_margins = analyze_functional_form(df, results, figs)
+    plot_hurdle_margins(hurdle_margins, figs)
     (results / "data_diagnostics.json").write_text(json.dumps(audit, indent=2))
     (results / "econometric_model_diagnostics.json").write_text(
         json.dumps(diagnostics, indent=2)
@@ -42,7 +47,8 @@ def run(data_path: Path, provenance_path: Path, results: Path, figs: Path):
     plot_ml(comparison, importance, calibration, figs)
     return (
         audit, coefs, diagnostics, margins, strata, comparison,
-        importance, calibration, split, sensitivity
+        importance, calibration, split, sensitivity, hurdle_summary,
+        hurdle_margins, function_table, support_margins
     )
 
 
