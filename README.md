@@ -1,5 +1,5 @@
 # THE PRICE OF CARE
-### Cost-Sharing, Chronic Disease Burden & Outpatient Physician Utilization
+### Cost-Sharing, Chronic Disease Burden, Count Econometrics & Interpretable ML
 
 **Real-data Health Economics research** · Applied Econometrics · Count Models · Explainable Machine Learning · Reproducible Python
 
@@ -9,13 +9,14 @@
 
 [![Real-data research CI](https://github.com/muhammad-siddique-research/price-of-care-health-economics/actions/workflows/reproduce.yml/badge.svg)](https://github.com/muhammad-siddique-research/price-of-care-health-economics/actions/workflows/reproduce.yml)
 
-**Read the complete research:** [APA 7th-style Manuscript](docs/MANUSCRIPT_APA7.md) · [Data Provenance](data/README.md) · [Research Methodology](docs/METHODS.md) · [Research Agenda](docs/RESEARCH_AGENDA.md).
+**Research library:** [2026 Evidence Map](docs/LITERATURE_REVIEW_2026.md) · [Detailed Two-Part Methods](docs/METHODS.md) · [APA Manuscript](docs/MANUSCRIPT_APA7.md).  
+**Original materials:** [APA 7th-style Manuscript](docs/MANUSCRIPT_APA7.md) · [Data Provenance](data/README.md) · [Research Methodology](docs/METHODS.md) · [Research Agenda](docs/RESEARCH_AGENDA.md).
 
 ## Why this project matters
 
 The RAND Health Insurance Experiment is a landmark study in Health Economics. This independent project analyzes **real archived research observations**, unlike a synthetic Medicare methods demonstration. The provided file is a **reduced 10-variable historical sample**, not the entire experiment; critically it has **no participant IDs, experimental assignment, or time stamps**. We therefore do not claim randomized treatment effects, independent-patient validation, or current clinical recommendations.
 
-The intellectual contribution here is **model-robustness triangulation**: a seemingly precise cost-sharing × health-burden interaction in a Poisson model becomes weaker under a Negative Binomial model that better captures dispersion. The entire analysis is reproducible and the limits of inference are explicit.
+The intellectual contribution here is **reproducible model-robustness triangulation, a true zero-truncated NB2 hurdle likelihood, and insurance-plan support auditing**: a seemingly precise cost-sharing × health-burden interaction in a Poisson model becomes weaker under a Negative Binomial model that better captures dispersion. The entire analysis is reproducible and the limits of inference are explicit.
 
 ## Verified empirical findings (20,190 real observations)
 
@@ -29,11 +30,13 @@ The intellectual contribution here is **model-robustness triangulation**: a seem
 | Cost-sharing × chronic burden, Poisson HC3 | beta = 0.0141; exploratory *p* = .003 |
 | Cost-sharing × chronic burden, NB2 | beta = 0.0079; exploratory *p* = .094 |
 | Test Poisson deviance, regularized Poisson | 4.589 |
-| Test Poisson deviance, Gradient-Boosted Poisson Trees | **4.435** |
+| Test Poisson deviance, Gradient-Boosted Poisson Trees | **approximately 4.44** |
+| Full-sample logit + zero-truncated NB2 hurdle AIC | **86,247** |
+| Non-IDP NB2 AIC, categorical vs continuous cost-sharing | **65,502 vs 65,509** |
 
 **Interpretation:** Poisson may overstate certainty when severe overdispersion and zero counts are inadequately modeled; however, NB2 and HC3 nominal tests also **cannot** correct unknown within-person clustering. The exploratory H2 moderation is **not robustly established**. The ML uplift is modest and predictive—not causal.
 
-## Six real-data, reproducible research figures
+## Eight real-data, reproducible research figures
 
 ### Figure 1 — Why visit counts require appropriate Econometrics
 
@@ -59,7 +62,19 @@ The intellectual contribution here is **model-robustness triangulation**: a seem
 
 ![Observed versus model-predicted visit counts](figures/figure_6_prediction_calibration.png)
 
-All six charts were generated from **real archived observations**; each is available as a PNG and editable, resolution-independent SVG. The dataset is historical, excludes patient identifiers, and cannot establish present-day medical or insurance effects.
+### Figure 7 — Extensive versus intensive healthcare utilization
+
+![Hurdle model with probability of any physician visits, expected positive visits, and total expected visits by recorded cost sharing and burden](figures/figure_7_hurdle_decomposition.png)
+
+The true **logistic + zero-truncated NB2** model separates starting care from the number of visits once care is used. Each curve is a **descriptive, model-standardized association**, not a policy-treatment curve.
+
+### Figure 8 — Continuous versus categorical insurance-price modeling
+
+![NB2 fitted means contrasting categorical coinsurance levels and the assumed smooth log-price curve](figures/figure_8_price_functional_form.png)
+
+In the observed **non-IDP subgroup**, 0%, 25%, 50%, and 95% coinsurance coexist. The 100% price category is structurally tied to the separate IDP plan. Categorical NB2 improves AIC modestly, but **BIC favors the simpler continuous model**. Both specifications are reported, not cherry-picked.
+
+All eight charts were generated from **real archived observations**; each is available as a PNG and editable, resolution-independent SVG. The dataset is historical, excludes patient identifiers, and cannot establish present-day medical or insurance effects.
 
 ## Analytical research workflow
 
@@ -79,7 +94,7 @@ flowchart LR
 
 ## Scientific competencies demonstrated
 
-**Applied Econometrics:** Poisson GLM, HC3 sandwich standard errors, NB2 dispersion estimation, interaction coefficients, count ratios, likelihood/AIC model comparisons, binomial logit, zero-mass adequacy, and sensitivity to sample composition.
+**Applied Econometrics:** Poisson GLM, HC3 sandwich standard errors, NB2 dispersion estimation, **zero-truncated NB2 hurdle likelihood, occurrence/intensity decomposition, observed-plan-support comparisons, categorical and continuous price form sensitivity**, interaction coefficients, count ratios, likelihood/AIC model comparisons, binomial logit, zero-mass adequacy, and sensitivity to sample composition.
 
 **Machine Learning:** Baseline versus regularized Poisson and gradient-boosted trees, a stringent exact-covariate-pattern holdout, Poisson deviance, MAE/RMSE, test-set permutation feature reliance, and prediction calibration.
 
@@ -100,7 +115,7 @@ pytest -q
 python -m health_econ.cli
 ```
 
-The bundled CSV, `data/rand_hie_statsmodels_sample.csv`, was copied from the **public-domain historical dataset** provided in `statsmodels.datasets.randhie`; it is **not generated or simulated**. The command verifies its stored checksum, computes Econometric and ML results, and regenerates the six figures. Small platform-specific floating-point differences in tree learning may occur; `results/ml_holdout_metrics.csv` is the source of exact values for each verified run. No secret keys, API access, network downloads, or restricted patient information are required.
+The bundled CSV, `data/rand_hie_statsmodels_sample.csv`, was copied from the **public-domain historical dataset** provided in `statsmodels.datasets.randhie`; it is **not generated or simulated**. The command verifies its stored checksum, computes Econometric and ML results, and regenerates the eight figures. Small platform-specific floating-point differences in tree learning may occur; `results/ml_holdout_metrics.csv` is the source of exact values for each verified run. No secret keys, API access, network downloads, or restricted patient information are required.
 
 ## Repository architecture
 
@@ -109,14 +124,17 @@ data/                         Real historical RAND subset and source SHA-256
 src/health_econ/data.py         Input provenance, validation, constructed indicators
 src/health_econ/econometrics.py  Poisson, NB2, logistic, interactions
 src/health_econ/robustness.py    Distributional and sample checks
+src/health_econ/hurdle.py        Logistic + zero-truncated NB2 and margins
+src/health_econ/functional_form.py  Plan-support-restricted NB2 comparisons
 src/health_econ/ml.py            Pattern-group split and interpretable ML
 src/health_econ/plots.py         Publication-quality PNG and SVG figures
 src/health_econ/cli.py           Reproducible research runner
 docs/MANUSCRIPT_APA7.md         Article with empirical results and APA references
 docs/METHODS.md                 Equations, modeling and identification limits
 docs/RESEARCH_AGENDA.md         Hypotheses, value addition, further research
+docs/LITERATURE_REVIEW_2026.md  Recent primary literature and evidence-gap audit
 results/                        Actual model outputs, sensitivity, audit, ML scores
-figures/                        Six empirical figures in PNG and SVG
+figures/                        Eight empirical figures in PNG and SVG
 tests/                          Dataset provenance and reproducibility checks
 .github/workflows/ci.yml        Full rerun on pushes and pull requests
 ```
@@ -131,9 +149,12 @@ tests/                          Dataset provenance and reproducibility checks
 
 ## Research conclusion
 
-The result worth highlighting is methodological rather than sensational: *overdispersion changes how strongly we should believe observed cost-sharing interactions*. NB2 fits the real count distribution substantially better, while nonlinear Poisson boosting improves the predictive baseline without resolving causal identification. This distinction is central to credible Health Economics and Applied Econometrics research.
+The result worth highlighting is methodological rather than sensational: *overdispersion changes how strongly we should believe observed cost-sharing interactions*. NB2 fits the real count distribution substantially better than Poisson, and the **hurdle likelihood separates visit non-use and positive-use intensity**. Alternative price functional forms reveal meaningful fit/complexity tradeoffs. Nonlinear Poisson boosting improves predictive loss without resolving causal identification. This distinction is central to credible Health Economics and Applied Econometrics research.
 
-## Selected references (APA 7th edition)
+## Selected current and foundational references (APA 7th edition)
+
+Aron-Dine, A., Einav, L., & Finkelstein, A. (2013). The RAND health insurance experiment, three decades later. *Journal of Economic Perspectives, 27*(1), 197–222. https://doi.org/10.1257/jep.27.1.197
+
 
 Brot-Goldberg, Z. C., Chandra, A., Handel, B. R., & Kolstad, J. T. (2017). What does a deductible do? The impact of cost-sharing on health care prices, quantities, and spending dynamics. *The Quarterly Journal of Economics, 132*(3), 1261–1318. https://doi.org/10.1093/qje/qjx013
 
@@ -141,11 +162,19 @@ Cameron, A. C., & Trivedi, P. K. (2005). *Microeconometrics: Methods and applica
 
 Cameron, A. C., & Trivedi, P. K. (2013). *Regression analysis of count data* (2nd ed.). Cambridge University Press. https://doi.org/10.1017/CBO9781139013567
 
+Deb, P., & Norton, E. C. (2018). Modeling health care expenditures and use. *Annual Review of Public Health, 39*, 489–505. https://doi.org/10.1146/annurev-publhealth-040617-013517
+
+Gidwani, R., Yank, V., Burgette, L., Kofner, A., Asch, S. M., & Wagner, Z. (2024). The impact of telehealth cost-sharing on healthcare utilization: Evidence from high-deductible health plans. *Health Services Research, 59*(6), e14343. https://doi.org/10.1111/1475-6773.14343
+
 Manning, W. G., Newhouse, J. P., Duan, N., Keeler, E. B., Leibowitz, A., & Marquis, M. S. (1987). Health insurance and the demand for medical care: Evidence from a randomized experiment. *The American Economic Review, 77*(3), 251–277. https://pubmed.ncbi.nlm.nih.gov/10284091/
 
 Newhouse, J. P., & the Insurance Experiment Group. (1993). *Free for all? Lessons from the RAND Health Insurance Experiment*. Harvard University Press. https://books.google.com/books?id=SVUJ4W9Lk5IC
 
 Statsmodels Developers. (n.d.). *RAND Health Insurance Experiment Data* [Data set and documentation]. Statsmodels. https://www.statsmodels.org/stable/datasets/generated/randhie.html
+
+Tran, A., Laporte, A., Nauenberg, E., & Hoagland, A. (2026). Role of chronic conditions in out-of-pocket costs for preventive care in the US. *JAMA Network Open, 9*(1), e2553157. https://doi.org/10.1001/jamanetworkopen.2025.53157
+
+See [the evidence map](docs/LITERATURE_REVIEW_2026.md) for the 2026 *Health Economics* article by Chen et al. and a study-design comparison.
 
 ## License
 
