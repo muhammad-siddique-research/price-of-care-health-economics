@@ -1,0 +1,13 @@
+{
+  "source": "statsmodels.datasets.randhie (included research sample derived from RAND HIE)",
+  "original_data": "RAND Health Insurance Experiment",
+  "sample_observations": 20190,
+  "variable_count": 10,
+  "source_package_version": "0.14.6",
+  "source_website": "https://www.statsmodels.org/stable/datasets/generated/randhie.html",
+  "sha256": "6c58ff02c7a568c267e93c3fffc517daba34239da2fed6287e94098b08471a5d",
+  "retrieval_method": "Bundled statsmodels local data; no generated or synthetic observations",
+  "license_note": "Statsmodels randhie documentation states dataset is public domain; package code license distinct.",
+  "row_unit_caveat": "Person or repeated-measure IDs and original trial design identifiers unavailable in subset.",
+  "created_utc": "2026-10-20T19:59:37Z"
+}

@@ -1,0 +1,13 @@
+__pycache__/
+.pytest_cache/
+.venv/
+*.egg-info/
+*.pyc
+.ruff_cache/
+.DS_Store
+.ipynb_checkpoints/
+# Do not commit credentials, restricted data or PHI.
+.env
+*.pem
+*.key
+data/private/
