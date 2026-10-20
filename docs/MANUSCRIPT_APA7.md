@@ -1,21 +1,24 @@
 # The Price of Care: Chronic Disease Burden and Cost-Sharing in Physician Utilization
 
-### A Real-Data Econometric and Explainable Machine Learning Investigation of the Historical RAND Health Insurance Experiment
+### A Reproducible Econometric, Two-Part Hurdle, and Predictive Machine Learning Study of Historical RAND Health Insurance Experiment Observations
 
 **Research type:** Reproducible computational reanalysis of historical, real observations.  
 **Dataset:** 20,190 observations and 10 variables, RAND Health Insurance Experiment research extract, publicly distributed via `statsmodels` (v0.14.6).  
 **Study scope:** Exploratory and associational; **not** a re-estimation of the original randomized experimental treatment effect.  
-**Reporting format:** APA 7th edition in-text citations and reference list.
+**Reporting format:** APA 7th-style in-text citations and references, with computational equations and reproducible code (GitHub Markdown is not a fully typeset journal submission).  
+**Revision:** October 2026; updated literature through 2026 and expanded models.
 
 ## Abstract
 
-**Background.** Patient cost-sharing has important implications for healthcare utilization, but its apparent association with demand may vary by health burden and by statistical specification. **Objective.** To assess whether the relationship between recorded insurance cost-sharing and outpatient physician visits varies with chronic disease burden, and whether nonlinear Machine Learning improves predictive performance over conventional Econometrics. **Methods.** We analyzed 20,190 real historical RAND Health Insurance Experiment observations distributed in a reduced research extract, fitting Poisson Generalized Linear Models with HC3 robust standard errors, Negative Binomial (NB2) models, a binary visit-occurrence model, and estimator/sample sensitivity checks. Regularized Poisson regression and Gradient-Boosted Trees were evaluated against a baseline on a covariate-pattern-group holdout. **Results.** Physician visits averaged 2.86 per observation; 31.2% reported zero visits. The Poisson cost-sharing × disease-burden coefficient was 0.0141 (exploratory *p* = .003), compared with 0.0079 (exploratory *p* = .094) in NB2. The NB2 model represented the observed zeros much more closely. Gradient-Boosted Trees reduced held-out mean Poisson deviance from 5.040 (uninformative baseline) to 4.435 (a 12.0% improvement). **Conclusion.** Evidence of cost-sharing moderation is model-sensitive; nonlinear Machine Learning improves prediction within this historical extract, but does not establish causal price effects or current policy relevance. This project contributes a reproducible cross-model robustness and explanation framework, not a verified novel causal discovery.
+**Background.** Cost-sharing can influence health service utilization, especially when medical needs differ. Conclusions about heterogeneity can also depend on distributions with many zero and highly dispersed visit counts. **Objective.** Assess how a recorded coinsurance–chronic-disease interaction behaves under robust count Econometrics, a genuine two-part hurdle likelihood, alternative insurance-price functional forms, and predictive Machine Learning. **Data and methods.** We analyzed 20,190 genuine historical RAND Health Insurance Experiment observations from the publicly distributed 10-variable statsmodels extract. We estimated Poisson HC3, NB2, logistic occurrence, logistic plus zero-truncated NB2 hurdle models, and categorical versus continuous price specifications within observed non-individual-deductible-plan (non-IDP) support. Predictive ML comparisons used a covariate-pattern holdout. **Results.** Mean visits were 2.86 and 31.24% of observations reported zero. The chronic-burden interaction was 0.0141 in Poisson (exploratory *p* = .003) and 0.0079 in NB2 (*p* = .094). The full-sample hurdle model yielded AIC = 86,247 compared with NB2 AIC = 86,789 and Poisson AIC = 124,799. Within the 14,941 non-IDP observations, categorical NB2 price specifications improved AIC (65,502 vs. 65,509), but BIC favored the simpler continuous specification. Gradient-boosted Poisson prediction improved held-out deviance modestly. **Conclusions.** Cost-sharing moderation is model-sensitive. Distribution-aware count methods, separating visit initiation from intensity, and checking benefit-design overlap improve research transparency. Because participant identifiers and randomization metadata are absent, results are **noncausal, exploratory associations**.
 
-**Keywords:** Health Economics; Cost-Sharing; Physician Utilization; Chronic Disease Burden; Poisson Regression; Negative Binomial; Applied Econometrics; Machine Learning; Model Robustness.
+**Keywords:** Health Economics; Insurance Cost-Sharing; Chronic Disease Burden; Hurdle Count Models; Zero-Truncated Negative Binomial; Model Robustness; Machine Learning; Reproducible Research.
 
 ## 1. Introduction and literature context
 
 Healthcare insurance reduces direct payment at the point of service, potentially influencing demand through changes in the marginal out-of-pocket price. Demand also reflects health need, liquidity constraints, provider access and institutional rules. The original RAND Health Insurance Experiment used random insurance assignments and documented reductions in utilization under cost sharing (Manning et al., 1987; Newhouse & the Insurance Experiment Group, 1993). Later work demonstrated that a move to high deductibles can reduce service quantities without relying primarily on price shopping (Brot-Goldberg et al., 2017).
+
+Recent studies underline the contemporary relevance of chronic conditions and financial barriers, while employing different research designs and data: Gidwani et al. (2024) examined a telehealth cost-sharing policy shift among chronically ill insured people; Chen et al. (2026) investigated chronic-disease outpatient insurance coverage in China; Tran et al. (2026) studied unexpected preventive-care out-of-pocket costs among people with chronic conditions. These studies are **context**, not validations of an estimated RAND treatment effect. For the appropriate count-data methods, Deb and Norton (2018) emphasize zero-heavy healthcare-use outcomes and hurdle models. Aron-Dine et al. (2013) caution against interpreting the RAND experiment through a single structural price elasticity. See the [2026 evidence map](LITERATURE_REVIEW_2026.md) for scope and contrasts.
 
 However, average utilization associations can obscure variation in health needs. Chronic disease burden plausibly changes clinical necessity, patient responsiveness and the distribution of visits. This raises an applied methodological question: **Does the apparent moderation of cost-sharing by chronic disease burden survive models that adequately accommodate overdispersed healthcare-use counts?**
 
@@ -25,7 +28,9 @@ However, average utilization associations can obscure variation in health needs.
 
 **H1:** Higher recorded cost-sharing is negatively associated with visit counts, conditional on included covariates.  
 **H2:** Chronic disease burden moderates the apparent cost-sharing association, but the strength of moderation is model-dependent.  
-**H3:** Nonlinear Machine Learning achieves lower held-out Poisson deviance than both the sample-mean baseline and regularized Poisson regression.
+**H3:** A complete two-part hurdle likelihood provides an alternative account of zero and positive visits.  
+**H4:** Non-IDP categorical price contrasts expose functional-form sensitivity relative to a continuous log-price term.  
+**H5:** Nonlinear Machine Learning achieves lower held-out Poisson deviance than both the sample-mean baseline and regularized Poisson regression.
 
 The hypotheses are **exploratory post hoc specifications**, not prospectively registered randomized-trial tests.
 
@@ -58,15 +63,15 @@ There are **11,065 identical complete rows** across its 10 variables. These are 
 
 Let \(Y_i\) represent physician visits, \(C_i=\ln(1+\text{coinsurance}_i)\), and \(D_i\) be the continuous chronic-disease burden measure. Cost-sharing is centered and disease burden standardized. The exploratory log-link specification is:
 
-\[
+$
 E(Y_i\mid C_i,D_i,X_i)=\exp\left(\beta_0+\beta_1 C_i^c+\beta_2D_i^z+\beta_3C_i^cD_i^z+X_i^{\top}\gamma\right).
-\]
+$
 
 The disease-dependent conditional count ratio associated with a **one-unit change in logged (coinsurance + 1)** is:
 
-\[
+$
 CR(d)=\exp\left(\beta_1+\beta_3d\right).
-\]
+$
 
 This is **not** a marginal effect of a ten-percentage-point insurance change, nor a causally identified price elasticity. The model contains `idp`, `lpi`, `fmde`, `physlm` and the three health category indicators as additional predictors. Because some insurance variables are mechanically related and potential post-assignment behavior is not identified, interpreting an individual coefficient structurally would be unwarranted.
 
@@ -74,9 +79,9 @@ This is **not** a marginal effect of a ten-percentage-point insurance change, no
 
 A Poisson GLM specifies a log conditional mean and its full-likelihood variance assumption is \(\operatorname{Var}(Y_i\mid X_i)=\mu_i\). We estimate HC3 robust covariance for that specification. A Negative Binomial NB2 model instead allows:
 
-\[
+$
 \operatorname{Var}(Y_i\mid X_i)=\mu_i+\alpha\mu_i^2,\qquad\alpha>0.
-\]
+$
 
 Pearson dispersion, AIC and expected-zero diagnostics assess model adequacy, not causal validity. In Poisson, the zero probability is \(\exp(-\mu_i)\). In NB2, the predicted zero probability is \((1+\alpha\mu_i)^{-1/\alpha}\). A logistic model estimates the probability of **any** physician visit as an auxiliary decomposition, not as a complete hurdle-count likelihood.
 
@@ -89,6 +94,33 @@ A Poisson-interaction slope is evaluated at disease-burden percentiles using the
 The algorithmically distinct benchmark models are a **training-set mean**, regularized **Poisson GLM**, and **Gradient-Boosted Trees with Poisson loss**. Training and test sets are separated using a **grouped covariate fingerprint split**: observations with identical nine-variable input profiles cannot appear in both partitions. The resulting holdout contains 14,881 training and 5,309 test rows. This restriction prevents exact covariate-pattern overlap, **but does not guarantee person-level separation**. It also may create an atypical covariate shift, so performance must not be presented as transportability to the modern population.
 
 Evaluation criteria are held-out mean Poisson deviance (primary), mean absolute error and root mean squared error. Permutation importance estimates change in predictive loss when a single covariate is shuffled on test rows; it is **not causal attribution**. Correlated insurance variables may redistribute importance. The pipeline uses fixed seeds, deterministic algorithm settings, no fitted imputation and a published source checksum.
+
+### 3.5 Complete two-part hurdle count model
+
+The earlier auxiliary logistic regression modeled visit occurrence but did not, by itself, constitute a hurdle model. We now fit two distinct maximum-likelihood components: (i) binary logit for any outpatient use and (ii) **zero-truncated NB2** for the count strictly conditional on positive visits, using the same covariate set.
+
+$
+\pi_i = \Pr(Y_i>0\mid X_i)=\operatorname{logit}^{-1}(X_i^\top\delta),
+$
+
+$
+Y_i\mid(Y_i>0,X_i)\sim\operatorname{TruncatedNB2}(\mu_i,\alpha),\quad \mu_i=\exp(X_i^\top\theta).
+$
+
+The combined model factors the likelihood into occurrence and positive-count components. Its mean is:
+
+$
+E(Y_i\mid X_i)=
+\pi_i\,\frac{\mu_i}{1-(1+\alpha\mu_i)^{-1/\alpha}}.
+$
+
+AIC uses the **sum** of the binary and positive-truncated log-likelihoods and counts **both** components' parameters, allowing descriptive comparisons with single-equation count models on the same full sample. The likelihood factorization operationalizes extensive-versus-intensive use (Deb & Norton, 2018), not a causal decision model.
+
+### 3.6 Price functional form and observed plan support
+
+Insurance contract terms are not independent: **100% coinsurance appears only in the individual deductible plan (IDP)** in the distributed subset. We therefore restrict a second comparison to non-IDP records (n = 14,941), which contain 0%, 25%, 50%, and 95% coinsurance. Within that sample we fit Poisson HC3 and NB2 using a continuous centered log-price term or **categorical coinsurance effects**, each interacted with standardized chronic burden.
+
+We compare AIC and BIC as in-sample relative-fit measures, reporting disagreement when one penalizes extra parameters more strongly. For visualization, we average model predictions within empirical disease-burden thirds at each **observed** non-IDP price level. Even within observed marginal price support, holding plan-associated covariates fixed while changing a price argument may create incoherent insurance bundles. Accordingly these are **associational standardized predictions**, not intervention effects, structural elasticities, or cost-savings estimates.
 
 ## 4. Empirical results
 
@@ -156,9 +188,42 @@ The boosted model reduces Poisson deviance by approximately **12.0% compared wit
 
 *Figure 6.* Mean fitted and actual counts by quintile of held-out model predictions. This describes historical predictive calibration, not patient risk prediction in a contemporary health system.
 
+### 4.5 Separating visit occurrence from positive-count intensity
+
+| Full-sample count model | AIC | Model-implied zero fraction |
+|---|---:|---:|
+| Poisson interaction | 124,798.9 | 8.42% |
+| NB2 interaction | 86,788.5 | 31.97% |
+| **Logit + zero-truncated NB2 hurdle** | **86,247.0** | **31.24%** |
+
+Both hurdle components converged; the truncated NB2 dispersion estimate is **1.773**. The observed sample includes **13,882 positive-use** and **6,308 zero-use** observations. The hurdle mean is 2.863 visits, close to the observed 2.860. Its zero fraction is essentially identical in sample because of the fitted occurrence equation; **this is not out-of-sample validation**. Lower in-sample AIC does not establish which model best represents clinical decisions or estimates causality.
+
+![Extensive use, positive-use intensity, and combined hurdle mean](../figures/figure_7_hurdle_decomposition.png)
+
+*Figure 7.* Three-panel model-standardized decomposition across non-IDP price levels and recorded chronic-burden tertiles. For the higher-burden third, the fitted hurdle total varies from 4.287 visits at a 0% price argument to 3.551 at 95%, while the fitted any-use probability varies from .835 to .727. These are **model calculations, not estimated effects of changing a person's insurance**.
+
+### 4.6 Continuous versus categorical price terms
+
+| Model, restricted to 14,941 non-IDP records | AIC | BIC |
+|---|---:|---:|
+| Poisson HC3; continuous logged price | 93,316.8 | 93,393.0 |
+| Poisson HC3; categorical price | 93,277.0 | 93,383.6 |
+| NB2; continuous logged price | 65,508.9 | **65,592.7** |
+| NB2; categorical price | **65,501.7** | 65,615.8 |
+
+Categorical NB2 has slightly lower **AIC** than linear log-price NB2, but **BIC favors the simpler model**, which is direct evidence of a model-complexity trade-off rather than an unequivocal best specification. The four non-IDP price levels have empirical support, unlike a naive contrast between the distinct 95% non-IDP and 100% IDP insurance structures.
+
+![Non-IDP categorical versus log-linear price functional form](../figures/figure_8_price_functional_form.png)
+
+*Figure 8.* NB2 standardized means across 0%, 25%, 50%, and 95% for each burden third: categorical in solid lines and continuous log-price in dashed lines. These are descriptive model evaluations, not policy-response curves.
+
+### 4.7 Integrated inference assessment
+
+These new checks reinforce, rather than overturn, the earlier finding that cost-sharing moderation is model-sensitive. Hurdle estimation provides a legitimate likelihood-based two-part analysis; categorical price models show functional-form dependence. **Neither resolves absent randomized allocation, participant-level dependence, treatment timing, multiple post hoc comparisons, or mechanically related plan variables.** All *p* values and HC3 intervals remain nominal under the untestable independent-row assumption.
+
 ## 5. Discussion and potential literature contribution
 
-Three findings are useful for Health Economics methods. First, **health need may shape observed utilization gradients**, but the study's abbreviated fields cannot separate need from insurance assignment, socioeconomic status or unobserved factors. Second, **a seemingly precise coefficient interaction may weaken when a realistic count variance is allowed**. Here, the conventional Poisson interaction is less compelling under NB2 and an any-visit model. Third, **nonlinear ML can exploit additional predictive structure** while still lacking the design information needed to attribute demand changes to insurance prices.
+Several findings are useful for Health Economics methods. The modern cost-sharing literature (Gidwani et al., 2024; Chen et al., 2026; Tran et al., 2026) provides current motivation for studying chronic need, though each study has different identification, populations and outcomes. First, **health need may shape observed utilization gradients**, but the study's abbreviated fields cannot separate need from insurance assignment, socioeconomic status or unobserved factors. Second, **a seemingly precise coefficient interaction may weaken when a realistic count variance is allowed**. Here, the conventional Poisson interaction is less compelling under NB2 and an any-visit model. Third, **nonlinear ML can exploit additional predictive structure** while still lacking the design information needed to attribute demand changes to insurance prices.
 
 The **literature-facing value addition** is a transparent, reproducible *robustness triangulation template*: readers can independently examine the same data and understand when model-dependent heterogeneity claims should be withheld. This is a useful methodological contribution for researchers and trainees, but a claim of original empirical or theoretical novelty would require further systematic review and independent validation.
 
@@ -170,13 +235,16 @@ The analytic subset lacks participant IDs, treatment assignment, year, age, inco
 
 ## 7. Conclusion
 
-This project analyzes **authentic historical Health Economics observations**, documents source integrity, and applies advanced Econometrics and Machine Learning without conflating fitted associations with causal effects. Physician visits are highly overdispersed and zero-heavy. The chronic-disease moderation estimate is *model-sensitive* rather than robustly conclusive, while Poisson-loss boosting modestly improves held-out predictions. **The principal contribution is rigorous analytical judgment, reproducibility, and interpretable method comparison**, not an unsupported new causal claim.
+This project analyzes **authentic historical Health Economics observations**, documents source integrity, and applies advanced Econometrics—including a genuine hurdle model and support-aware categorical price specification—alongside Machine Learning without conflating fitted associations with causal effects. Physician visits are highly overdispersed and zero-heavy. The chronic-disease moderation estimate is *model-sensitive* rather than robustly conclusive, while Poisson-loss boosting modestly improves held-out predictions. **The principal contribution is rigorous analytical judgment, reproducibility, and interpretable method comparison**, not an unsupported new causal claim.
 
 ## 8. Reproducibility and research transparency
 
-All original archived observations in this extract, a SHA-256 source manifest, Python code, unit tests, model diagnostics, sensitivity estimates, ML benchmarking tables, and six figures (PNG and SVG) are included with the repository. Run `python -m health_econ.cli` to regenerate the results. The data come from the historical RAND research program as distributed through statsmodels. All new results and potential errors in this independent reanalysis remain the responsibility of the project authors, not RAND.
+All original archived observations in this extract, a SHA-256 source manifest, Python code, unit tests, model diagnostics, sensitivity estimates, ML benchmarking tables, and eight figures (PNG and SVG) are included with the repository. Run `python -m health_econ.cli` to regenerate the results. The data come from the historical RAND research program as distributed through statsmodels. All new results and potential errors in this independent reanalysis remain the responsibility of the project authors, not RAND.
 
-## References
+## References (APA 7th edition)
+
+Aron-Dine, A., Einav, L., & Finkelstein, A. (2013). The RAND health insurance experiment, three decades later. *Journal of Economic Perspectives, 27*(1), 197–222. https://doi.org/10.1257/jep.27.1.197
+
 
 Brot-Goldberg, Z. C., Chandra, A., Handel, B. R., & Kolstad, J. T. (2017). What does a deductible do? The impact of cost-sharing on health care prices, quantities, and spending dynamics. *The Quarterly Journal of Economics, 132*(3), 1261–1318. https://doi.org/10.1093/qje/qjx013
 
@@ -184,8 +252,16 @@ Cameron, A. C., & Trivedi, P. K. (2005). *Microeconometrics: Methods and applica
 
 Cameron, A. C., & Trivedi, P. K. (2013). *Regression analysis of count data* (2nd ed.). Cambridge University Press. https://doi.org/10.1017/CBO9781139013567
 
+Chen, X., Feng, J., Wang, Z., & Yu, D. (2026). Insurance coverage for chronic diseases and healthcare of low-income people: Evidence from Chinese administrative data. *Health Economics, 35*(2), 294–311. https://doi.org/10.1002/hec.70050
+
+Deb, P., & Norton, E. C. (2018). Modeling health care expenditures and use. *Annual Review of Public Health, 39*, 489–505. https://doi.org/10.1146/annurev-publhealth-040617-013517
+
+Gidwani, R., Yank, V., Burgette, L., Kofner, A., Asch, S. M., & Wagner, Z. (2024). The impact of telehealth cost-sharing on healthcare utilization: Evidence from high-deductible health plans. *Health Services Research, 59*(6), e14343. https://doi.org/10.1111/1475-6773.14343
+
 Manning, W. G., Newhouse, J. P., Duan, N., Keeler, E. B., Leibowitz, A., & Marquis, M. S. (1987). Health insurance and the demand for medical care: Evidence from a randomized experiment. *The American Economic Review, 77*(3), 251–277. https://pubmed.ncbi.nlm.nih.gov/10284091/
 
 Newhouse, J. P., & the Insurance Experiment Group. (1993). *Free for all? Lessons from the RAND Health Insurance Experiment*. Harvard University Press. https://books.google.com/books?id=SVUJ4W9Lk5IC
 
 Statsmodels Developers. (n.d.). *RAND Health Insurance Experiment Data* [Data set and documentation]. Statsmodels. https://www.statsmodels.org/stable/datasets/generated/randhie.html
+
+Tran, A., Laporte, A., Nauenberg, E., & Hoagland, A. (2026). Role of chronic conditions in out-of-pocket costs for preventive care in the US. *JAMA Network Open, 9*(1), e2553157. https://doi.org/10.1001/jamanetworkopen.2025.53157
