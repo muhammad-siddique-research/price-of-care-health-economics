@@ -1,0 +1,73 @@
+name: Real RAND HIE Reproducible Research
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  research:
+    name: Research pipeline (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.12']
+
+    steps:
+      - name: Checkout research code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install documented requirements
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[dev]'
+          python -m pip install 'statsmodels==0.14.6'
+
+      - name: Materialize and verify genuine historical RAND HIE sample
+        run: |
+          python scripts/materialize_rand.py
+          python -c "from pathlib import Path; import hashlib,json; p=Path('data/rand_hie_statsmodels_sample.csv'); m=json.loads(Path('data/PROVENANCE.json').read_text()); assert hashlib.sha256(p.read_bytes()).hexdigest()==m['sha256']"
+
+      - name: Validate source style
+        run: ruff check src tests scripts
+
+      - name: Verify integrity and model tests
+        run: pytest -q
+
+      - name: Reproduce Econometrics, Machine Learning and all six figures
+        run: python -m health_econ.cli
+
+      - name: Preserve peer-reviewable data and results as workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: historical-rand-analysis-py${{ matrix.python-version }}
+          path: |
+            data/rand_hie_statsmodels_sample.csv
+            data/PROVENANCE.json
+            figures/
+            results/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish verified real dataset and reproducible figures on main
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.python-version == '3.12' && github.actor != 'github-actions[bot]' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/rand_hie_statsmodels_sample.csv results/ figures/
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish reproducible real RAND data and empirical results [skip ci]"
+            git push origin HEAD:main
+          else
+            echo "No changes to verified research outputs"
+          fi
