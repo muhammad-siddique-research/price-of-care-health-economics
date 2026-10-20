@@ -63,15 +63,15 @@ There are **11,065 identical complete rows** across its 10 variables. These are 
 
 Let \(Y_i\) represent physician visits, \(C_i=\ln(1+\text{coinsurance}_i)\), and \(D_i\) be the continuous chronic-disease burden measure. Cost-sharing is centered and disease burden standardized. The exploratory log-link specification is:
 
-$
+$$
 E(Y_i\mid C_i,D_i,X_i)=\exp\left(\beta_0+\beta_1 C_i^c+\beta_2D_i^z+\beta_3C_i^cD_i^z+X_i^{\top}\gamma\right).
-$
+$$
 
 The disease-dependent conditional count ratio associated with a **one-unit change in logged (coinsurance + 1)** is:
 
-$
+$$
 CR(d)=\exp\left(\beta_1+\beta_3d\right).
-$
+$$
 
 This is **not** a marginal effect of a ten-percentage-point insurance change, nor a causally identified price elasticity. The model contains `idp`, `lpi`, `fmde`, `physlm` and the three health category indicators as additional predictors. Because some insurance variables are mechanically related and potential post-assignment behavior is not identified, interpreting an individual coefficient structurally would be unwarranted.
 
@@ -79,9 +79,9 @@ This is **not** a marginal effect of a ten-percentage-point insurance change, no
 
 A Poisson GLM specifies a log conditional mean and its full-likelihood variance assumption is \(\operatorname{Var}(Y_i\mid X_i)=\mu_i\). We estimate HC3 robust covariance for that specification. A Negative Binomial NB2 model instead allows:
 
-$
+$$
 \operatorname{Var}(Y_i\mid X_i)=\mu_i+\alpha\mu_i^2,\qquad\alpha>0.
-$
+$$
 
 Pearson dispersion, AIC and expected-zero diagnostics assess model adequacy, not causal validity. In Poisson, the zero probability is \(\exp(-\mu_i)\). In NB2, the predicted zero probability is \((1+\alpha\mu_i)^{-1/\alpha}\). A logistic model estimates the probability of **any** physician visit as an auxiliary decomposition, not as a complete hurdle-count likelihood.
 
@@ -99,20 +99,20 @@ Evaluation criteria are held-out mean Poisson deviance (primary), mean absolute 
 
 The earlier auxiliary logistic regression modeled visit occurrence but did not, by itself, constitute a hurdle model. We now fit two distinct maximum-likelihood components: (i) binary logit for any outpatient use and (ii) **zero-truncated NB2** for the count strictly conditional on positive visits, using the same covariate set.
 
-$
+$$
 \pi_i = \Pr(Y_i>0\mid X_i)=\operatorname{logit}^{-1}(X_i^\top\delta),
-$
+$$
 
-$
+$$
 Y_i\mid(Y_i>0,X_i)\sim\operatorname{TruncatedNB2}(\mu_i,\alpha),\quad \mu_i=\exp(X_i^\top\theta).
-$
+$$
 
 The combined model factors the likelihood into occurrence and positive-count components. Its mean is:
 
-$
+$$
 E(Y_i\mid X_i)=
 \pi_i\,\frac{\mu_i}{1-(1+\alpha\mu_i)^{-1/\alpha}}.
-$
+$$
 
 AIC uses the **sum** of the binary and positive-truncated log-likelihoods and counts **both** components' parameters, allowing descriptive comparisons with single-equation count models on the same full sample. The likelihood factorization operationalizes extensive-versus-intensive use (Deb & Norton, 2018), not a causal decision model.
 
