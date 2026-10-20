@@ -7,6 +7,8 @@
 
 > **Research question:** Does the recorded cost-sharing–physician utilization relationship vary with chronic disease burden—and do these findings hold up under Negative Binomial Econometrics and nonlinear Machine Learning?
 
+[![Real-data research CI](https://github.com/muhammad-siddique-research/price-of-care-health-economics/actions/workflows/reproduce.yml/badge.svg)](https://github.com/muhammad-siddique-research/price-of-care-health-economics/actions/workflows/reproduce.yml)
+
 **Read the complete research:** [APA 7th-style Manuscript](docs/MANUSCRIPT_APA7.md) · [Data Provenance](data/README.md) · [Research Methodology](docs/METHODS.md) · [Research Agenda](docs/RESEARCH_AGENDA.md).
 
 ## Why this project matters
@@ -27,7 +29,7 @@ The intellectual contribution here is **model-robustness triangulation**: a seem
 | Cost-sharing × chronic burden, Poisson HC3 | beta = 0.0141; exploratory *p* = .003 |
 | Cost-sharing × chronic burden, NB2 | beta = 0.0079; exploratory *p* = .094 |
 | Test Poisson deviance, regularized Poisson | 4.589 |
-| Test Poisson deviance, Gradient-Boosted Poisson Trees | **4.437** |
+| Test Poisson deviance, Gradient-Boosted Poisson Trees | **4.435** |
 
 **Interpretation:** Poisson may overstate certainty when severe overdispersion and zero counts are inadequately modeled; however, NB2 and HC3 nominal tests also **cannot** correct unknown within-person clustering. The exploratory H2 moderation is **not robustly established**. The ML uplift is modest and predictive—not causal.
 
@@ -98,7 +100,7 @@ pytest -q
 python -m health_econ.cli
 ```
 
-The bundled CSV, `data/rand_hie_statsmodels_sample.csv`, was copied from the **public-domain historical dataset** provided in `statsmodels.datasets.randhie`; it is **not generated or simulated**. The command verifies its stored checksum, computes Econometric and ML results, and regenerates the six figures. No secret keys, API access, network downloads, or restricted patient information are required.
+The bundled CSV, `data/rand_hie_statsmodels_sample.csv`, was copied from the **public-domain historical dataset** provided in `statsmodels.datasets.randhie`; it is **not generated or simulated**. The command verifies its stored checksum, computes Econometric and ML results, and regenerates the six figures. Small platform-specific floating-point differences in tree learning may occur; `results/ml_holdout_metrics.csv` is the source of exact values for each verified run. No secret keys, API access, network downloads, or restricted patient information are required.
 
 ## Repository architecture
 
