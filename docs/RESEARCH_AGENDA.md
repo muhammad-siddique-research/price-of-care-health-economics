@@ -6,7 +6,7 @@
 
 The landmark RAND Health Insurance Experiment has been studied extensively. This project **does not claim to be the first** study of price responsiveness, heterogeneity, or count-model regression in the dataset. Its contribution is a **transparent, reproducible robustness and predictive-methods comparison**: Poisson HC3, NB2, subsample sensitivity, binary occurrence, and modern nonlinear count prediction on the same real historical records.
 
-The initial Poisson interaction suggests stronger moderation than the NB2 model, demonstrating why statistically significant coefficients alone cannot establish a stable empirical narrative.
+The updated analysis now incorporates a *genuine* logistic–zero-truncated NB2 hurdle model and a support-aware comparison of categorical versus log-linear price terms. The initial Poisson interaction suggests stronger moderation than the NB2 model, demonstrating why statistically significant coefficients alone cannot establish a stable empirical narrative.
 
 ## Research hypotheses
 
@@ -15,6 +15,18 @@ The initial Poisson interaction suggests stronger moderation than the NB2 model,
 - **H3:** Nonlinear Machine Learning with a count-aware Poisson loss can outperform a generalized-linear predictive baseline on a held-out covariate-pattern split.
 
 Hypotheses were developed for a computational portfolio, **not preregistered**, and cannot establish randomized causal effects or structural price elasticities.
+
+## 2026 literature and contribution audit
+
+Recent work includes telehealth cost-sharing among chronically ill enrollees (Gidwani et al., 2024), chronic disease insurance expansion (Chen et al., 2026), and unexpected preventive-service costs for people with chronic conditions (Tran et al., 2026). These use different populations and designs, including stronger identification than the limited RAND research extract permits. The proposed contribution is a **reproducible methodology benchmark**, not a priority claim that no prior research examined demand heterogeneity.
+
+## Additional implemented exploratory hypotheses
+
+**H4:** A two-part logistic–zero-truncated NB2 hurdle model may improve full-sample count-data fit and distinguish visit occurrence from positive-use intensity.
+
+**H5:** The fitted coinsurance association may vary when modeled as observed discrete benefit levels rather than a continuous log-price, especially after excluding the structurally distinct IDP design.
+
+The observed comparisons support methodological sensitivity, **not an actual insurance policy experiment or causal effect**. See [verified current references](LITERATURE_REVIEW_2026.md).
 
 ## Next-stage causal research (not implemented)
 
