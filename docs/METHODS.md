@@ -25,23 +25,23 @@ The estimand is a **conditional association**: how physician-visit counts vary w
 
 Define centered coinsurance (C_i^c=C_i-\bar C) and standardized disease burden (D_i^z=(D_i-\bar D)/s_D). The count conditional mean model is
 
-\[
+$$
 \log E[Y_i\mid C_i^c,D_i^z,\mathbf X_i]
 =\beta_0+\beta_1C_i^c+\beta_2 D_i^z+\beta_3 C_i^cD_i^z+\mathbf X_i^\top\gamma.
-\]
+$$
 
 The conditional count ratio for a unit change in log coinsurance at burden level (d) is
 
-\[
+$$
 CR(d)=\exp(\widehat\beta_1+d\widehat\beta_3).
-\]
+$$
 
 For (g(d)=\beta_1+d\beta_3), the delta-method variance is
 
-\[
+$$
 \widehat{\operatorname{Var}}(\widehat g(d))
 =\widehat V_{11}+d^2\widehat V_{33}+2d\widehat V_{13}.
-\]
+$$
 
 Exponentiating (\widehat g(d) \pm 1.96\sqrt{\widehat{\operatorname{Var}}(\widehat g(d))}) gives the reported 95% HC3 Wald interval. **HC3 does not correct unknown repeated-person clustering.**
 
@@ -58,6 +58,42 @@ Compare same-sample fitted models on their respective assumptions; lower AIC ind
 ### Binary occurrence model
 
 Fit logit for (\Pr(Y_i>0\mid X_i)). This explores the extensive margin but is **not** an estimated full two-part/hurdle likelihood. Do not compare binomial coefficients directly to count-model slopes.
+
+## Expanded count Econometrics: hurdle likelihood and plan overlap
+
+### True two-part count likelihood
+
+A standalone occurrence logit is not a hurdle count model. The expanded code fits (a) binomial logit for whether any visits occur, followed by (b) a **zero-truncated NB2** positive-count model by maximum likelihood. Both parts use the same baseline covariates and their log-likelihoods are added, with parameters counted separately for AIC. In symbols:
+
+$
+\pi_i = \Pr(Y_i>0 \mid X_i)=\operatorname{logit}^{-1}(X_i^\top\delta),
+$
+
+$
+Y_i \mid (Y_i>0,X_i) \sim \operatorname{TruncatedNB2}(\mu_i,\alpha),
+\quad \mu_i=\exp(X_i^\top\theta),
+$
+
+$
+E(Y_i\mid X_i)=\pi_i\,\mu_i/
+\left[1-(1+\alpha\mu_i)^{-1/\alpha}\right].
+$
+
+This is a distributional decomposition of **any care versus number of visits among users**, not an econometrically identified two-stage insurance decision. When the logit fits its intercept on the complete sample, its in-sample predicted zero fraction can match the observed fraction very closely **by construction**; this is not external calibration (Deb & Norton, 2018).
+
+### Common-support and functional-form diagnosis
+
+The 100% coinsurance category exists only under the structurally different individual deductible plan. A support-respecting regression comparison therefore uses the **14,941 non-IDP observations** at 0%, 25%, 50%, and 95% coinsurance, excluding \`idp\` as a constant regressor. Two models are compared **on exactly the same sample**: a continuous logged cost-sharing term and a categorical coinsurance term (both interacted with recorded burden) using Poisson HC3 and NB2.
+
+NB2 AIC is approximately 65,509 under continuous log-price and 65,502 under categories; BIC is approximately 65,593 versus 65,616. Thus one information criterion favors the flexible model and the other the simpler model. Neither selection criterion establishes a causal elasticity.
+
+For each observed disease-burden third, **model-standardized margins** evaluate the fitted prediction at supported coinsurance levels while averaging over the original empirical covariates. These remain **descriptive associations**, and setting a price regressor while holding mechanically related benefit-design covariates constant may generate counterfactual plan combinations that could never be assigned. These graphs are not policy simulations.
+
+### Threats to inferential validity
+
+The reduced archive omits original family and participant identifiers, assignment blocks, dates, and several clinical/demographic variables. Neither model's default independent-row information matrix, HC3 robust standard errors, nor AIC/BIC can correct missing participant-level clustering, unobserved panel dependence, post-hoc model choice or selective covariate availability. Coefficients and nominal *p* values are exploratory.
+
+Current implementation: [\`hurdle.py\`](../src/health_econ/hurdle.py) and [\`functional_form.py\`](../src/health_econ/functional_form.py). Outputs: \`hurdle_model_diagnostics.json\`, \`hurdle_standardized_margins.csv\`, \`price_functional_form_comparisons.csv\`, \`price_support_sensitivity_margins.csv\`, and **Figures 7–8**.
 
 ## Robustness checks
 
@@ -78,12 +114,12 @@ Benchmarks:
 
 Held-out primary loss, mean Poisson deviance:
 
-\[
+$$
 D_P(y,\widehat\mu)
 =\frac{2}{n}\sum_{i=1}^n
 \left[y_i\log\left(\frac{y_i}{\widehat\mu_i}\right)
 -y_i+\widehat\mu_i\right],
-\]
+$$
 
 where (0\log(0/\mu)=0). Supplement with MAE, RMSE and calibration by predicted-count quintile. Perform permutation importance on the held-out sample with four random shuffles per predictor. Importance measures **predictive model reliance**, not SHAP causal effects or policy impacts.
 
@@ -98,3 +134,6 @@ Every result is generated by `python -m health_econ.cli` using the SHA-256-valid
 This subset excludes person IDs, experimental randomization/strata, observation dates, age, income and additional trial controls. It cannot identify a causal cost-sharing effect, a contemporaneous Medicare policy impact, or out-of-person predictive generalization. The original RAND experiment had richer data; the limitation concerns **the reduced extract**, not the original study design.
 
 For complete APA 7th citations and findings see [the research manuscript](MANUSCRIPT_APA7.md).
+
+
+For verified 2024–2026 studies contextualizing cost-sharing and chronic illness and for APA references, consult [the literature evidence map](LITERATURE_REVIEW_2026.md) and the [revised manuscript](MANUSCRIPT_APA7.md).
