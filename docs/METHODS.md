@@ -1,139 +1,499 @@
-# Detailed Methods, Identification Audit, and Computational Reproducibility
+# Detailed Research Methods, Identification Audit, and Reproducibility
+## The Price of Care: Computational Health Economics, Robust Count Econometrics, and Interpretable Machine Learning
 
-## Scope and research estimand
+**Study type:** Independent, exploratory computational reanalysis of authentic **historical RAND Health Insurance Experiment (HIE)** observations distributed in a reduced `statsmodels` extract.  
+**Available sample:** **20,190 rows × 10 original variables**; no missing cells in the documented fields.  
+**Primary outcome:** `mdvis`, a nonnegative outpatient physician-visit count.  
+**Inference:** **Descriptive associations, model diagnostics, and pattern-held-out prediction—not identified randomized treatment effects or current clinical recommendations.**  
+**Implementation:** Python ≥3.10; `statsmodels`, `scikit-learn`, `pandas`, `NumPy`, `SciPy`, and `Matplotlib`.  
 
-This is an **observational reanalysis of real archived RAND Health Insurance Experiment (HIE) sample records**. Despite the historical experiment's randomized assignment, this 10-variable extract excludes participant IDs and treatment allocation. Consequently, it does **not** estimate a randomized intention-to-treat effect or identified price elasticity.
+[Research overview](../README.md) · [Manuscript](MANUSCRIPT_APA7.md) · [Data provenance](../data/README.md) · [Research agenda](RESEARCH_AGENDA.md) · [Verified outputs](../results/)
 
-The estimand is a **conditional association**: how physician-visit counts vary with recorded transformed coinsurance and whether that association differs along a chronic-disease burden measure.
+---
 
-### Primary variables
+## 1. Research objectives, questions, and the limits of the estimand
 
-- Outcome: `mdvis`, nonnegative outpatient physician-visit count.
-- Cost-sharing: `lncoins = log(1 + coinsurance percent)`, corresponding to approximate 0%, 25%, 50%, 95%, and 100% plan levels.
-- Disease burden: `disea`; despite the source description as a disease count, fractional values occur. Treat as a continuous recorded burden measure, standardized to unit population standard deviation.
-- Controls: `idp`, `lpi`, `fmde`, `physlm`, `hlthg`, `hlthf`, `hlthp`. Insurance-related terms may be mechanically related; fitted associations are not experimentally isolated effects.
+The original RAND HIE randomized insurance arrangements. **This 10-variable analysis extract does not contain the participant/family identifiers, allocation records, timing, assignment strata, or baseline covariate history required to reproduce that experimental design.** The analysis therefore does not estimate an intention-to-treat (ITT) effect, treatment-on-the-treated effect, identified insurance-price elasticity, or effects of present-day health policies.
 
-## Data integrity and provenance
-
-1. Retrieve all **20,190 real archived observations** from the historical public-domain statsmodels package, not synthetic simulations.
-2. Reject altered bytes using the SHA-256 fingerprint in `data/PROVENANCE.json`.
-3. Validate field completeness, finite values, nonnegative integer physician visits, binary plan indicator and mutually exclusive health category indicators.
-4. **Retain identical observations:** missing patient/occasion IDs prevent identifying legitimate repeated records. Deleting duplicate rows would silently alter the research extract.
-5. Record mean and variance of visits, fraction with zero visits, disease measure peculiarities, and cost-sharing categories.
-
-## Poisson and NB2 Econometric specification
-
-Define centered coinsurance (C_i^c=C_i-\bar C) and standardized disease burden (D_i^z=(D_i-\bar D)/s_D). The count conditional mean model is
+For archived row `i`, denote physician-visit counts by `Y_i`, logged cost-sharing by `C_i`, recorded disease-burden measure by `D_i`, and observed controls by `X_i`. The primary descriptive target is the conditional utilization mean:
 
 $$
-\log E[Y_i\mid C_i^c,D_i^z,\mathbf X_i]
-=\beta_0+\beta_1C_i^c+\beta_2 D_i^z+\beta_3 C_i^cD_i^z+\mathbf X_i^\top\gamma.
+m(c,d,x) = \operatorname{E}[Y_i\mid C_i=c,\ D_i=d,\ X_i=x].
 $$
 
-The conditional count ratio for a unit change in log coinsurance at burden level (d) is
+Regression coefficients summarize **model-conditional associations** in this reduced archive. Predictions and model-standardized contrasts must not be interpreted as outcomes under interventions that change insurance coverage.
+
+| Research question | Operational comparison | Interpretation permitted |
+|---|---|---|
+| **RQ1.** Does chronic-disease burden modify the fitted cost-sharing association? | `costshare_c × disease_z` in Poisson HC3, NB2, and any-visit logit | Exploratory, specification-sensitive interaction |
+| **RQ2.** Are non-use and use intensity modeled differently? | Occurrence logit + zero-truncated NB2 hurdle likelihood | Descriptive two-part count fit |
+| **RQ3.** Does the insurance-price functional form alter fitted utilization? | Logged continuous vs. categorical coinsurance on non-IDP records | Within-subset fit and specification sensitivity |
+| **RQ4.** Does nonlinear count-aware ML improve prediction? | Training mean, regularized Poisson GLM, Poisson gradient-boosted trees | Fixed held-out covariate-pattern prediction |
+| **RQ5.** Can this extract support an insurance-design policy effect? | Identification audit of omitted assignment/IDs/time variables | **No identified policy effect** |
+
+**Research-status declaration:** These are exploratory post hoc hypotheses and analyses—not preregistered confirmatory tests. The researcher should not represent nominal p-values as multiplicity-controlled discoveries.
+
+## 2. Source data, reproducibility, and variable construction
+
+### 2.1 Historical provenance
+
+The original historical observations are distributed in `statsmodels.datasets.randhie`. The repository's [provenance manifest](../data/PROVENANCE.json) records `statsmodels` source version **0.14.6**, the original ten fields, and SHA-256:
+
+```text
+6c58ff02c7a568c267e93c3fffc517daba34239da2fed6287e94098b08471a5d
+```
+
+The bundled dataset is **not synthetic**. The automated workflow rematerializes the data using [`scripts/materialize_rand.py`](../scripts/materialize_rand.py), verifies its SHA-256 fingerprint, runs tests, and regenerates artifacts. The ordinary CLI uses the local bundled file; it does not silently download fresh observations. A matching fingerprint establishes file integrity relative to the repository manifest, **not** validity of the original trial design or correctness of all data documentation.
+
+The loader (`src/health_econ/data.py`) requires all ten original fields, rejects missing or non-finite values, checks that visits are nonnegative integers, checks binary plan/health indicators, and rejects negative transformed coinsurance or disease values. Exact duplicate *records* are retained because there is no participant identifier proving they are erroneous duplicate measurements.
+
+### 2.2 Variables and transformations
+
+| Source field | Meaning / analysis role | Handling |
+|---|---|---|
+| `mdvis` | Outpatient physician-visit count | Outcome, integer ≥0 |
+| `lncoins` | `log(1 + coinsurance percentage)` | Main continuous recorded cost-sharing covariate |
+| `idp` | Individual deductible plan indicator | Benefit-design control; omitted as constant in `idp=0` subsample |
+| `disea` | Archived chronic-disease measure | Continuous observed burden index; **not** repaired into an integer count |
+| `lpi` | Logged participation incentive | Control, potentially linked to plan arrangements |
+| `fmde` | Plan financial transformation | Control, potentially mechanically linked to cost sharing |
+| `physlm` | Archived physical limitation measure | Preserved numerically without invented diagnoses |
+| `hlthg`, `hlthf`, `hlthp` | Self-reported good, fair, poor health indicators | Binary controls (omitted reference category implicit) |
+
+The record includes **18,396 noninteger values of `disea`**; treating these as discrete diagnoses would alter the observed data. The implementation uses the recorded continuous measure.
+
+Let `C_i = \texttt{lncoins}_i`, `D_i = \texttt{disea}_i`, and define *full-extract* preprocessing constants:
 
 $$
-CR(d)=\exp(\widehat\beta_1+d\widehat\beta_3).
+C_i^c = C_i-\overline{C},\qquad
+D_i^z = \frac{D_i-\overline{D}}{s_D},\qquad
+s_D=\sqrt{\frac{1}{N}\sum_{i=1}^{N}(D_i-\overline D)^2}.
 $$
 
-For (g(d)=\beta_1+d\beta_3), the delta-method variance is
+The standard deviation uses `ddof=0`. Centering and standardization are calculated **once on the entire archived dataset** by `prepare_data`; they are reused in model-subset sensitivity analyses. This is an in-sample descriptive modeling convention, not leakage-free preprocessing for the ML holdout (which separately uses the source features).
+
+An approximate percentage is reconstructed as `round(exp(lncoins)-1)`. Observed categories are **0%, 25%, 50%, 95%, and 100%**. Disease-burden thirds are constructed with `qcut(disea.rank(method="first"), 3)`: rank-breaking of ties creates approximately equal-sized groups and is a descriptive visualization device, not clinical disease categorization.
+
+### 2.3 Verified descriptive diagnostics
+
+| Diagnostic | Saved result |
+|---|---:|
+| Archived rows | 20,190 |
+| Original variables | 10 |
+| Missing values | 0 |
+| Mean physician visits | 2.8604 |
+| Sample variance of visits | 20.2893 |
+| Rows reporting zero visits | 6,308 (**31.243%**) |
+| Positive-visit rows | 13,882 |
+| Largest observed visit count | 77 |
+| Identical ten-field rows retained | 11,065 |
+
+The large variance relative to the mean and substantial zero share motivate count-distribution diagnostics. They do **not** establish the existence of an additional structural-zero process.
+
+Source: [`results/data_diagnostics.json`](../results/data_diagnostics.json) and [`observed_costsharing_strata.csv`](../results/observed_costsharing_strata.csv).
+
+## 3. Core Count Econometrics: Poisson, NB2, and occurrence logit
+
+### 3.1 Conditional mean, interaction, and covariates
+
+The implemented full-sample baseline is:
 
 $$
-\widehat{\operatorname{Var}}(\widehat g(d))
-=\widehat V_{11}+d^2\widehat V_{33}+2d\widehat V_{13}.
+\log \mu_i
+=\beta_0+\beta_1 C_i^c+\beta_2 D_i^z + X_i^\top \gamma,
+\qquad \mu_i=\operatorname{E}[Y_i\mid C_i^c,D_i^z,X_i].
 $$
 
-Exponentiating (\widehat g(d) \pm 1.96\sqrt{\widehat{\operatorname{Var}}(\widehat g(d))}) gives the reported 95% HC3 Wald interval. **HC3 does not correct unknown repeated-person clustering.**
-
-### Poisson regression
-
-The Poisson conditional mean can be useful with HC3 sandwich variance even with overdispersion if its conditional mean is correctly specified and observations are independent at the relevant unit. Neither assumption can be fully verified from this dataset.
-
-### Negative binomial (NB2) sensitivity
-
-The model assumes (\operatorname{Var}(Y_i\mid X_i)=\mu_i+\alpha\mu_i^2), where (\alpha>0). Fit the interaction model by ML and report convergence, AIC, Pearson dispersion and observed/predicted zero counts. The NB2 expected zero probability is ((1+\alpha\mu)^{-1/\alpha}); the Poisson probability is (e^{-\mu}).
-
-Compare same-sample fitted models on their respective assumptions; lower AIC indicates relative in-sample fit, **not** causal identification.
-
-### Binary occurrence model
-
-Fit logit for (\Pr(Y_i>0\mid X_i)). This explores the extensive margin but is **not** an estimated full two-part/hurdle likelihood. Do not compare binomial coefficients directly to count-model slopes.
-
-## Expanded count Econometrics: hurdle likelihood and plan overlap
-
-### True two-part count likelihood
-
-A standalone occurrence logit is not a hurdle count model. The expanded code fits (a) binomial logit for whether any visits occur, followed by (b) a **zero-truncated NB2** positive-count model by maximum likelihood. Both parts use the same baseline covariates and their log-likelihoods are added, with parameters counted separately for AIC. In symbols:
-
-$
-\pi_i = \Pr(Y_i>0 \mid X_i)=\operatorname{logit}^{-1}(X_i^\top\delta),
-$
-
-$
-Y_i \mid (Y_i>0,X_i) \sim \operatorname{TruncatedNB2}(\mu_i,\alpha),
-\quad \mu_i=\exp(X_i^\top\theta),
-$
-
-$
-E(Y_i\mid X_i)=\pi_i\,\mu_i/
-\left[1-(1+\alpha\mu_i)^{-1/\alpha}\right].
-$
-
-This is a distributional decomposition of **any care versus number of visits among users**, not an econometrically identified two-stage insurance decision. When the logit fits its intercept on the complete sample, its in-sample predicted zero fraction can match the observed fraction very closely **by construction**; this is not external calibration (Deb & Norton, 2018).
-
-### Common-support and functional-form diagnosis
-
-The 100% coinsurance category exists only under the structurally different individual deductible plan. A support-respecting regression comparison therefore uses the **14,941 non-IDP observations** at 0%, 25%, 50%, and 95% coinsurance, excluding \`idp\` as a constant regressor. Two models are compared **on exactly the same sample**: a continuous logged cost-sharing term and a categorical coinsurance term (both interacted with recorded burden) using Poisson HC3 and NB2.
-
-NB2 AIC is approximately 65,509 under continuous log-price and 65,502 under categories; BIC is approximately 65,593 versus 65,616. Thus one information criterion favors the flexible model and the other the simpler model. Neither selection criterion establishes a causal elasticity.
-
-For each observed disease-burden third, **model-standardized margins** evaluate the fitted prediction at supported coinsurance levels while averaging over the original empirical covariates. These remain **descriptive associations**, and setting a price regressor while holding mechanically related benefit-design covariates constant may generate counterfactual plan combinations that could never be assigned. These graphs are not policy simulations.
-
-### Threats to inferential validity
-
-The reduced archive omits original family and participant identifiers, assignment blocks, dates, and several clinical/demographic variables. Neither model's default independent-row information matrix, HC3 robust standard errors, nor AIC/BIC can correct missing participant-level clustering, unobserved panel dependence, post-hoc model choice or selective covariate availability. Coefficients and nominal *p* values are exploratory.
-
-Current implementation: [\`hurdle.py\`](../src/health_econ/hurdle.py) and [\`functional_form.py\`](../src/health_econ/functional_form.py). Outputs: \`hurdle_model_diagnostics.json\`, \`hurdle_standardized_margins.csv\`, \`price_functional_form_comparisons.csv\`, \`price_support_sensitivity_margins.csv\`, and **Figures 7–8**.
-
-## Robustness checks
-
-- Full archived sample versus dropping observations above the 99th percentile of visits; report changed N.
-- Full sample versus non-individual-deductible plans (re-estimate without constant `idp` predictor).
-- HC3 Poisson versus NB2, zero-fraction fit and overdispersion.
-- All p-values exploratory; no adjustments for unobserved clustering or multiplicity.
-
-## Predictive Machine Learning
-
-Create a group-preserving split via hashed **identical covariate patterns**. This prevents identical predictor rows entering both sets, but it **does not create a true patient-level holdout**: patients might appear with altered covariates across rows. No patient ID is available.
-
-Benchmarks:
-
-- Dummy predictor using the training mean.
-- Standardized regularized Poisson regression.
-- Histogram gradient-boosted regression with Poisson loss, maximum leaves, shrinkage and a fixed random seed.
-
-Held-out primary loss, mean Poisson deviance:
+The main interaction specification is:
 
 $$
-D_P(y,\widehat\mu)
-=\frac{2}{n}\sum_{i=1}^n
-\left[y_i\log\left(\frac{y_i}{\widehat\mu_i}\right)
--y_i+\widehat\mu_i\right],
+\log \mu_i
+=\beta_0+\beta_1 C_i^c+\beta_2 D_i^z
++\beta_3(C_i^cD_i^z)+X_i^\top \gamma.
 $$
 
-where (0\log(0/\mu)=0). Supplement with MAE, RMSE and calibration by predicted-count quintile. Perform permutation importance on the held-out sample with four random shuffles per predictor. Importance measures **predictive model reliance**, not SHAP causal effects or policy impacts.
+Here `X_i` contains `idp`, `lpi`, `fmde`, `physlm`, `hlthg`, `hlthf`, and `hlthp`. The interaction coefficient `β_3` measures the change in the **fitted log-count association** with a one-standard-deviation shift in recorded disease burden, **per one-unit increase in `log(1 + coinsurance percent)`**. It is **not** a direct percentage-point coinsurance interaction, treatment effect, or elasticity.
 
-## Graphs, reporting and reproducibility
+The discrete model-conditional count ratio at standardized burden `d` for a one-unit change in logged cost-sharing is:
 
-Recreate six results in PNG and SVG: empirical physician-visit distribution; observed visit averages by cost-sharing/disease tertiles; HC3 conditional count-ratio intervals; ML deviance comparison; held-out permutation feature reliance; and predicted/observed calibration.
+$$
+\operatorname{CR}(d)=\exp\left(\widehat{\beta}_1+d\widehat{\beta}_3\right).
+$$
 
-Every result is generated by `python -m health_econ.cli` using the SHA-256-validated archived research sample. GitHub Actions must reproduce tests and outputs, not import figures from outside unverified sources.
+For any actual change from price `p_0` to `p_1` (both expressed as percentages), the fitted ratio under the log-linear specification is:
 
-## Threats to validity
+$$
+\exp\left[
+\{\widehat{\beta}_1+d\widehat{\beta}_3\}
+\{\log(1+p_1)-\log(1+p_0)\}
+\right].
+$$
 
-This subset excludes person IDs, experimental randomization/strata, observation dates, age, income and additional trial controls. It cannot identify a causal cost-sharing effect, a contemporaneous Medicare policy impact, or out-of-person predictive generalization. The original RAND experiment had richer data; the limitation concerns **the reduced extract**, not the original study design.
+Both are **conditional model contrasts**, not observed causal responses to changing a person's insurance plan. All estimated interactions are exploratory.
 
-For complete APA 7th citations and findings see [the research manuscript](MANUSCRIPT_APA7.md).
+### 3.2 Poisson GLM and HC3 uncertainty
 
+The Poisson GLM assumes the working conditional variance `Var(Y_i \mid X_i)=\mu_i`. The code fits the baseline and interaction models using the log link and row-level **HC3 sandwich covariance**:
 
-For verified 2024–2026 studies contextualizing cost-sharing and chronic illness and for APA references, consult [the literature evidence map](LITERATURE_REVIEW_2026.md) and the [revised manuscript](MANUSCRIPT_APA7.md).
+```python
+smf.glm(formula, data=df, family=sm.families.Poisson()).fit(cov_type="HC3")
+```
+
+Poisson quasi-maximum-likelihood interpretation may remain useful under overdispersion if the conditional mean is correctly specified and the appropriate independent observational units are available. **HC3 protects neither against unobserved within-person/family correlation nor against unmeasured confounding or incorrect conditional mean specification.** Since IDs are absent, reported HC3 intervals assume row-level independence that cannot be verified.
+
+For `g(d)=\beta_1+d\beta_3`, the implemented delta-method uncertainty is:
+
+$$
+\widehat{\operatorname{Var}}[\widehat g(d)]
+=\widehat V_{11}+d^2\widehat V_{33}+2d\widehat V_{13},
+$$
+
+where `V` is the fitted HC3 covariance matrix for the two coefficients. The displayed approximate 95% conditional count-ratio interval is:
+
+$$
+\left[
+\exp\{\widehat g(d)-1.96\,\operatorname{SE}(\widehat g(d))\},
+\exp\{\widehat g(d)+1.96\,\operatorname{SE}(\widehat g(d))\}
+\right].
+$$
+
+The archived burden percentiles **10, 25, 50, 75, 90** are evaluated in [`heterogeneous_count_ratios.csv`](../results/heterogeneous_count_ratios.csv) and Figure 3. These intervals are **nominal**, not participant-clustered or family-clustered confidence intervals.
+
+### 3.3 NB2 maximum likelihood and count variance
+
+To diagnose sensitivity to overdispersion, the implementation fits a **Negative Binomial NB2** regression by BFGS maximum likelihood with the same covariates and interaction:
+
+$$
+\operatorname{Var}(Y_i\mid X_i)=\mu_i+\alpha\mu_i^2,\qquad \alpha>0.
+$$
+
+The NB2 conditional zero probability is:
+
+$$
+\Pr(Y_i=0\mid X_i)=(1+\alpha\mu_i)^{-1/\alpha},
+$$
+
+versus `exp(-μ_i)` for Poisson. For each model the reported zero fraction is the **average model-implied zero probability**, not simply the probability at the mean covariate pattern. Pearson dispersion is computed from `sum((Y_i-μ_i)^2/V_i)/(N-k)` using the model-specific variance.
+
+The **NB2 MLE standard errors use the model's default independent-observation covariance**, not HC3. Therefore comparisons between Poisson HC3 and NB2 nominal p-values reflect changes in distributional assumptions **and variance estimation conventions**; they should not be interpreted as a formal test of whether the interaction truly exists.
+
+### 3.4 Separate any-visit logit
+
+The project additionally fits a binomial-logit GLM (with HC3 covariance) for `A_i=1(Y_i>0)` using the same interaction terms:
+
+$$
+\Pr(A_i=1\mid X_i)=\operatorname{logit}^{-1}
+(\delta_0+\delta_1 C_i^c+\delta_2 D_i^z+\delta_3 C_i^cD_i^z+X_i^\top\eta).
+$$
+
+This standalone logit is **not, by itself, a count hurdle model**. Its coefficients concern log-odds of any use, and are not directly comparable in scale with Poisson/NB2 log-count coefficients. A complete hurdle likelihood is implemented separately in `hurdle.py` (`Section 4` below).
+
+### 3.5 Verified primary model results
+
+| Full-extract measure | Poisson with HC3 | NB2 MLE |
+|---|---:|---:|
+| Interaction coefficient | 0.014064 | 0.007885 |
+| Interaction standard error | 0.004806 | 0.004713 |
+| Exploratory nominal p | .00343 | .09434 |
+| AIC | 124,798.92 | 86,788.52 |
+| Pearson dispersion | 6.289 | 1.421 |
+| Predicted zero share | 8.417% | 31.969% |
+| Actual zero share | 31.243% | 31.243% |
+
+**Interpretive finding:** The apparently precise Poisson moderation estimate weakens under NB2. This is evidence of **specification-dependent inference**, not a conclusive causal or clinically actionable interaction. The NB2 model fits the in-sample zero share more closely but cannot resolve unidentified clustering or plan-selection mechanisms.
+
+Sources: [coefficients](../results/econometric_coefficients.csv) · [model diagnostics](../results/econometric_model_diagnostics.json).
+
+## 4. Full two-part hurdle count likelihood
+
+### 4.1 Why a hurdle specification?
+
+The project distinguishes the *extensive margin* (any physician visits) from the *intensive positive-count distribution* (how many visits appear among rows with at least one visit). This distinction is **statistical**, not a demonstrated sequential behavioral decision by patients.
+
+Let `π_i = P(Y_i>0|X_i)`. The code estimates a binomial occurrence logit using the complete sample and a **zero-truncated Negative Binomial (NB2, p=2)** likelihood using `Y_i>0` rows. The latter is fit through `statsmodels.discrete.truncated_model.TruncatedLFNegativeBinomialP` with `truncation=0`.
+
+For positive integer `y`, let `f_{NB2}(y;\mu_i,\alpha)` denote an untruncated NB2 probability, and let `p_{0i}=(1+\alpha\mu_i)^{-1/\alpha}`. The hurdle probability mass is:
+
+$$
+\Pr(Y_i=y\mid X_i)=
+\begin{cases}
+1-\pi_i, & y=0,\\[3pt]
+\pi_i\,\dfrac{f_{\mathrm{NB2}}(y;\mu_i,\alpha)}{1-p_{0i}},
+ & y=1,2,\ldots
+\end{cases}
+$$
+
+with `π_i = logit^{-1}(X_i^\top δ)` and `μ_i=exp(X_i^\top θ)`. The two components have distinct parameter vectors and are estimated on the applicable complete and positive-count subsets:
+
+$$
+\ell_{\mathrm{hurdle}}
+=\sum_i\left[
+1(Y_i=0)\log(1-\pi_i)
++1(Y_i>0)\left\{\log\pi_i+\log f_{\mathrm{NB2}}(Y_i;\mu_i,\alpha)-\log(1-p_{0i})\right\}
+\right].
+$$
+
+The software's combined log-likelihood is the sum of the fitted **occurrence** and **positive-count truncated** log-likelihoods. Its reported information criterion counts parameters in both components:
+
+$$
+\operatorname{AIC}_{\mathrm{hurdle}}
+=-2\left(\ell_{\mathrm{logit}}+\ell_{\mathrm{truncated\ NB2}}\right)
++2(k_{\mathrm{logit}}+k_{\mathrm{truncated\ NB2}}).
+$$
+
+The conditional positive-use expectation and total hurdle expectation are:
+
+$$
+\operatorname{E}[Y_i\mid Y_i>0,X_i]
+=\frac{\mu_i}{1-(1+\alpha\mu_i)^{-1/\alpha}},
+\qquad
+\operatorname{E}[Y_i\mid X_i]
+=\pi_i\,\operatorname{E}[Y_i\mid Y_i>0,X_i].
+$$
+
+The implementation obtains the truncated conditional positive mean through the statsmodels prediction interface and multiplies it by the occurrence probability. **In-sample reproduction of the observed zero fraction follows largely from the fitted occurrence intercept; it is not out-of-sample validation or proof of a structural two-decision process.**
+
+### 4.2 Fit and standardized descriptive margins
+
+| Full-extract count model | AIC | Average implied zero share |
+|---|---:|---:|
+| Poisson interaction | 124,798.92 | 8.417% |
+| NB2 interaction | 86,788.52 | 31.969% |
+| **Occurrence logit + zero-truncated NB2** | **86,246.96** | **31.243%** |
+
+The fitted positive-count dispersion parameter is **1.7725** and both hurdle components report convergence. The model-standardized mean of **2.8632** is close to the observed mean of **2.8604**.
+
+**Margins are not randomized contrasts.** The code takes the non-IDP rows within each *global* disease-burden third, substitutes each observed non-IDP price argument (0, 25, 50, or 95), holds other covariates as recorded, and averages fitted occurrence, conditional positive count and combined count. Even though these levels appear in the non-IDP subset, the substitution may create **unsupported joint combinations** of price with `lpi`, `fmde` or other plan fields. Treat Figure 7 as a visual diagnostic of fitted specifications, **not** a policy simulation or causal standardization.
+
+Source: [hurdle diagnostics](../results/hurdle_model_diagnostics.json) · [standardized margins](../results/hurdle_standardized_margins.csv) · [Figure 7](../figures/figure_7_hurdle_decomposition.png).
+
+## 5. Benefit-design support and insurance-price functional form
+
+The 100% coinsurance category in this extract is structurally tied to the **individual deductible plan** (`idp=1`), whereas the **14,941 `idp=0` rows** include observed rounded coinsurance levels **0, 25, 50, and 95**. This motivates a restricted **between-model same-sample comparison** that removes the constant `idp` covariate and checks how conclusions depend on price functional form.
+
+Two conditional-mean models with identical non-IDP records and remaining controls are compared:
+
+**Continuous logged cost sharing:**
+
+$$
+\log\mu_i=a+b_1C_i^c+b_2D_i^z
++b_3 C_i^cD_i^z+W_i^\top\lambda.
+$$
+
+**Categorical insurance-price levels (reference: 0%):**
+
+$$
+\log\mu_i=a+b_DD_i^z+
+\sum_{p\in\{25,50,95\}}
+\left[b_p\,1(P_i=p)+h_p\,1(P_i=p)D_i^z\right]
++W_i^\top\lambda.
+$$
+
+Here `W_i` is the original control list **without `idp`**. Both specifications are estimated using Poisson HC3 and NB2 MLE. The categorical interactions are not interpreted as effects of randomized insurance transitions.
+
+For `k` fitted coefficients, full-sample model likelihood `ℓ` and sample size `n`, the code computes:
+
+$$
+\operatorname{AIC}=-2\ell+2k,\qquad
+\operatorname{BIC}=-2\ell+k\log n.
+$$
+
+| Same **14,941** non-IDP rows | AIC | BIC |
+|---|---:|---:|
+| Poisson, continuous log price | 93,316.84 | 93,392.96 |
+| Poisson, categorical price | 93,277.04 | 93,383.61 |
+| NB2, continuous log price | 65,508.93 | **65,592.66** |
+| NB2, categorical price | **65,501.65** | 65,615.83 |
+
+For NB2, **AIC favors the categorical model while BIC favors the more parsimonious continuous model**. These are relative **in-sample likelihood penalties**, sensitive to the likelihood and independence assumptions. They do not establish model truth, causal identification or out-of-sample improvement.
+
+A further diagnostic calculates model-standardized expected visits for each global disease-burden third and the four observed non-IDP price arguments, averaging predictions over recorded subgroup covariates. Again, **marginal support for the price category does not imply joint covariate positivity or feasible individual-level insurance switches**.
+
+Source: [price-form comparisons](../results/price_functional_form_comparisons.csv) · [support sensitivity margins](../results/price_support_sensitivity_margins.csv) · [Figure 8](../figures/figure_8_price_functional_form.png).
+
+## 6. Sensitivity analysis and inferential reliability
+
+The implementation refits the primary interaction specification across three analysis samples:
+
+1. **Full extract:** `n=20,190`.
+2. **Exclude rows above the empirical 99th percentile of utilization:** `n=20,007`; observations at or below the threshold are retained. This is not verified exclusion of a fixed percentage of unique people.
+3. **Non-IDP subset:** `n=14,941`, dropping the now-constant `idp` regressor.
+
+| Sample | Estimator | N | Interaction β | Exploratory p |
+|---|---|---:|---:|---:|
+| All rows | Poisson HC3 | 20,190 | 0.014064 | .00343 |
+| All rows | NB2 MLE | 20,190 | 0.007885 | .09434 |
+| Trim upper utilization | Poisson HC3 | 20,007 | 0.013130 | .00075 |
+| Trim upper utilization | NB2 MLE | 20,007 | 0.008425 | .06381 |
+| Non-IDP only | Poisson HC3 | 14,941 | 0.021356 | .00012 |
+| Non-IDP only | NB2 MLE | 14,941 | 0.016416 | .00216 |
+
+Sample changes, overdispersion and model functional form alter numerical conclusions. The stronger non-IDP interaction may reflect plan composition and selection rather than a robust heterogeneity mechanism.
+
+**Unresolved inferential limitations:** No subject/household ID for clustered covariance; no experiment allocation for randomized design reconstruction; no longitudinal time or baseline disease measurement; no multiplicity correction for exploratory testing. A small nominal p-value under these conditions is not a definitive hypothesis test. Excluding high-visit observations also changes the target population represented in the sample.
+
+Saved file: [interaction sensitivity checks](../results/interaction_sensitivity_checks.csv).
+
+## 7. Predictive Machine Learning, grouping, and validation
+
+### 7.1 Prediction target and split design
+
+The predictive task is `mdvis` from **nine original non-outcome variables**: `lncoins`, `idp`, `lpi`, `fmde`, `physlm`, `disea`, `hlthg`, `hlthf` and `hlthp`. Models are trained to predict counts; **they do not estimate causal effects**.
+
+The code hashes each complete predictor vector using `pandas.util.hash_pandas_object(..., index=False)` and applies a **single `GroupShuffleSplit`**, with `test_size=0.25` and random seed **2026**, grouping identical covariate fingerprints. This prevents *exact* predictor patterns from crossing train/test sets. It is **not a person-level, family-level, temporal, or external holdout**: one patient could contribute different covariate patterns to both partitions; hash fingerprints do not reveal patient identity.
+
+| Split diagnostic | Verified count |
+|---|---:|
+| Training observations | **14,881** |
+| Test observations | **5,309** |
+| Unique full-dataset predictor patterns | **2,760** |
+| Split count | **1** |
+| Model random seed | **2026** |
+
+`GroupShuffleSplit` samples groups rather than enforcing an exact row-level 25% proportion; the realized test share is approximately 26.3%. Outcomes were not used to construct the grouping fingerprint, but no verified independent-patient generalization is possible.
+
+### 7.2 Implemented estimators
+
+- **Training-mean baseline:** `DummyRegressor(strategy="mean")`.
+- **Regularized Poisson:** `StandardScaler` followed by `PoissonRegressor(alpha=0.05, max_iter=1200)`. The scaler is fitted on training data inside the pipeline.
+- **Nonlinear count model:** `HistGradientBoostingRegressor(loss="poisson", learning_rate=0.06, max_iter=180, max_leaf_nodes=15, min_samples_leaf=45, l2_regularization=4.0, early_stopping=False, random_state=2026)`.
+
+No nested cross-validation, random hyperparameter search, external validation cohort, or patient-grouped cross-validation is implemented. The settings should be reported as fixed specifications rather than a globally optimized model.
+
+### 7.3 Evaluation metrics
+
+Held-out primary loss is the mean Poisson deviance for positive predictions:
+
+$$
+D_{\mathrm{P}}(y,\widehat\mu)
+=\frac{2}{n_{\mathrm{test}}}\sum_{i\in\mathrm{test}}
+\left[
+y_i\log\left(\frac{y_i}{\widehat\mu_i}\right)-y_i+\widehat\mu_i
+\right],
+$$
+
+with `0\log(0/\widehat\mu_i)=0` by convention. Code clips predicted means below `10^{-8}` for numerical stability. Supplementary metrics:
+
+$$
+\operatorname{MAE}=\frac{1}{n}\sum_i|y_i-\widehat\mu_i|,
+\qquad
+\operatorname{RMSE}=\sqrt{\frac{1}{n}\sum_i(y_i-\widehat\mu_i)^2}.
+$$
+
+### 7.4 Verified fixed-holdout results
+
+| Model | Mean Poisson deviance ↓ | MAE ↓ | RMSE ↓ |
+|---|---:|---:|---:|
+| Training mean | 5.0403 | 2.8581 | 4.8375 |
+| Regularized Poisson | 4.5892 | 2.6925 | 4.6860 |
+| **Boosted Poisson trees** | **4.4354** | **2.6219** | **4.6377** |
+
+On this single held-out split, boosted trees reduced Poisson deviance by approximately **3.35%** versus regularized Poisson and **12.0%** versus the training-mean baseline. No uncertainty interval across repeated splits was estimated, and these gains do not establish modern clinical risk prediction, transportability, or causal feature influence.
+
+### 7.5 Predictive reliance and calibration
+
+After fitting the boosted model, the code computes permutation importance on the held-out subset using **four feature shuffles each**, seed 2026, and negative mean Poisson deviance as the scoring convention. The reported importance is the resulting **increase in deviance** under disruption of a feature. Correlated insurance variables may exchange or suppress apparent importance; this is **not SHAP**, causal attribution, or a stable ranking of policy levers.
+
+Predictions are sorted and divided into **five equally sized rank-based prediction groups** using a `qcut` of predicted-value ranks. For each bin, mean observed and predicted visit counts are compared. This is one-split group calibration **within the archived data**, not validation across hospitals, years or individuals.
+
+Sources: [holdout metrics](../results/ml_holdout_metrics.csv) · [permutation reliance](../results/ml_permutation_importance.csv) · [calibration](../results/ml_calibration.csv) · [split audit](../results/predictive_split_audit.json).
+
+## 8. Figures and link to implemented outputs
+
+The code produces **eight** research figures, each available in PNG and SVG. Figures are model diagnostics or descriptive displays, **not causal response surfaces**.
+
+| Figure | Computational source | Primary content |
+|---|---|---|
+| [1. Visits distribution](../figures/figure_1_visits_distribution.png) | `plots.py` | Count distribution, 16+ values pooled |
+| [2. Observed grouped means](../figures/figure_2_costshare_disease_heterogeneity.png) | `plots.py` | Price categories × global disease thirds |
+| [3. Poisson conditional ratios](../figures/figure_3_interaction_margins.png) | `plots.py` | HC3 delta-method interval at burden percentiles |
+| [4. Predictive benchmark](../figures/figure_4_ml_comparison.png) | `plots.py` | One-split test Poisson deviance |
+| [5. Permutation reliance](../figures/figure_5_permutation_importance.png) | `plots.py` | Test-set feature disruption |
+| [6. Prediction calibration](../figures/figure_6_prediction_calibration.png) | `plots.py` | Predicted vs observed quintile means |
+| [7. Hurdle margins](../figures/figure_7_hurdle_decomposition.png) | `hurdle.py` | Occurrence, positive intensity and unconditional fitted mean |
+| [8. Price functional form](../figures/figure_8_price_functional_form.png) | `functional_form.py` | Categorical vs logged price NB2 on non-IDP sample |
+
+## 9. Research reproducibility protocol
+
+### 9.1 Local steps
+
+From the repository root (Python ≥3.10):
+
+```bash
+python -m venv .venv
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+# macOS/Linux: source .venv/bin/activate
+python -m pip install -e ".[dev]"
+pytest -q
+python -m health_econ.cli
+```
+
+For exact recreation of the repository's archived-data environment, install `statsmodels==0.14.6` and run `python scripts/materialize_rand.py` prior to the CLI. The [`pyproject.toml`](../pyproject.toml) permits a broader compatible statsmodels range, whereas [the GitHub Actions workflow](../.github/workflows/reproduce.yml) explicitly pins **0.14.6** when reproducing the historical sample. Do not treat a successful import under another dependency version as a guarantee of byte-for-byte identical numerical outputs.
+
+### 9.2 Automated quality checks
+
+The GitHub Actions workflow (`Python 3.10` and `3.12`):
+
+1. Installs package and development dependencies and pins `statsmodels==0.14.6`.
+2. Rematerializes the historical dataset, checks the SHA-256 manifest, and runs `ruff`.
+3. Runs `pytest`.
+4. Executes `python -m health_econ.cli` to regenerate statistical results and all eight figures.
+5. Publishes workflow artifacts for review and, under its configured main-branch conditions, commits refreshed results/figures if changed.
+
+**Reproduction claim:** The current repository contains runnable code and machine-generated outputs, not a claim that all possible platforms will produce byte-identical boosted-tree estimates. Differences across numerical library and platform versions should be checked against the committed metrics and the workflow artifacts. The current documentation revision does not rerun or modify any estimation code.
+
+### 9.3 Output-to-claim traceability
+
+| Claim or diagnostic | Authoritative committed artifact |
+|---|---|
+| Authentic sample, count distribution | [`data_diagnostics.json`](../results/data_diagnostics.json) |
+| Model fit, dispersion and zero share | [`econometric_model_diagnostics.json`](../results/econometric_model_diagnostics.json) |
+| Parameters, nominal errors and p-values | [`econometric_coefficients.csv`](../results/econometric_coefficients.csv) |
+| HC3 count-ratio intervals | [`heterogeneous_count_ratios.csv`](../results/heterogeneous_count_ratios.csv) |
+| Count sensitivity across samples | [`interaction_sensitivity_checks.csv`](../results/interaction_sensitivity_checks.csv) |
+| Two-part log-likelihood/AIC | [`hurdle_model_diagnostics.json`](../results/hurdle_model_diagnostics.json) |
+| Hurdle-standardized descriptive means | [`hurdle_standardized_margins.csv`](../results/hurdle_standardized_margins.csv) |
+| Price functional form comparisons | [`price_functional_form_comparisons.csv`](../results/price_functional_form_comparisons.csv) |
+| Price-supported subgroup margins | [`price_support_sensitivity_margins.csv`](../results/price_support_sensitivity_margins.csv) |
+| Machine Learning comparison | [`ml_holdout_metrics.csv`](../results/ml_holdout_metrics.csv) |
+| Prediction split limitations | [`predictive_split_audit.json`](../results/predictive_split_audit.json) |
+| Permutation importance and calibration | [`ml_permutation_importance.csv`](../results/ml_permutation_importance.csv) and [`ml_calibration.csv`](../results/ml_calibration.csv) |
+
+## 10. Threats to validity and responsible healthcare-policy interpretation
+
+**Internal validity:** This reduced extract lacks original random assignment, family/participant identifiers, baseline morbidity timing, and repeated-measure information. The observed cost-sharing variable may be mechanically related to other plan characteristics. Neither regression adjustment nor model-standardized margins identifies an insurance intervention effect.
+
+**Statistical inference:** HC3 adjusts certain heteroskedasticity-related row-level variance calculations but cannot restore appropriate clustering or correct unknown dependence. NB2/hurdle maximum-likelihood standard errors assume the specified row likelihood structure. No family-clustered uncertainty, randomization inference, multiplicity control, or complete trial-based identification is available.
+
+**Predictive validity:** Identical predictor-pattern grouping removes one narrow type of train/test overlap but does not demonstrate independent-patient prediction, transportability, subgroup fairness, or prospective validity. Performance comparisons come from one realized split and fixed model settings.
+
+**External validity:** The source data are historical, incomplete, and distinct from modern Medicare claims, current insurance markets, and contemporary care delivery. A high quality of code reproduction does not imply that the fitted price-response patterns generalize to present patients.
+
+**Ethics and privacy:** The repository uses a public historical extract, no identified current patient records, and no private claims datasets. Independent results should not be presented as RAND Corporation's conclusions or clinical guidance.
+
+**Evidence-calibrated policy conclusion:** Before using cost-sharing associations to design chronic-disease benefits, future work should distinguish access to any care from intensity conditional on care; audit plan-level and covariate support; consider severity and the risk of forgone effective care; establish a credible treatment variation source; and use appropriate clustering and multi-site or multi-period validation. **This archive alone cannot determine the optimal coinsurance rate or the effect of reducing cost sharing for patients with chronic illness.**
+
+## 11. Next-stage original study: design requirements, not completed work
+
+A follow-up causal research project would require documented access to the **complete** RAND HIE experimental files (or a separately identified modern natural experiment), including participant and household IDs, assignment unit, randomized benefit allocation, trial dates, baseline burden, attrition and health outcomes.
+
+For randomized insurance assignment `Z_g` at the family/assignment-unit level, a defensible *future* estimand could be the baseline-burden-specific intention-to-treat effect:
+
+$$
+\tau(d)
+=\operatorname{E}[Y_{ig}(1)-Y_{ig}(0)\mid D^{\mathrm{baseline}}_{ig}=d],
+$$
+
+where `Y(1)` and `Y(0)` are potential outcomes under the assigned plan categories. For multi-arm randomization, prespecify the relevant pair of assignments. Estimation would use the original allocation structure, inference clustered at the randomization unit, attrition checks, and prespecified heterogeneous-effect hypotheses. A price-elasticity estimand would require additional contract-price and behavioral assumptions and cannot be substituted for ITT.
+
+**None of these causal analyses has been implemented or produced empirical results in this repository.** The scientific rationale and surrounding literature are described in the [research agenda](RESEARCH_AGENDA.md) and [targeted evidence map](LITERATURE_REVIEW_2026.md).
+
+## References and methodological foundations
+
+- Aron-Dine, A., Einav, L., & Finkelstein, A. (2013). The RAND health insurance experiment, three decades later. *Journal of Economic Perspectives, 27*(1), 197–222. https://doi.org/10.1257/jep.27.1.197
+- Cameron, A. C., & Trivedi, P. K. (2013). *Regression analysis of count data* (2nd ed.). Cambridge University Press. https://doi.org/10.1017/CBO9781139013567
+- Deb, P., & Norton, E. C. (2018). Modeling health care expenditures and use. *Annual Review of Public Health, 39*, 489–505. https://doi.org/10.1146/annurev-publhealth-040617-013517
+- Manning, W. G., Newhouse, J. P., Duan, N., Keeler, E. B., Leibowitz, A., & Marquis, M. S. (1987). Health insurance and the demand for medical care: Evidence from a randomized experiment. *American Economic Review, 77*(3), 251–277. https://pubmed.ncbi.nlm.nih.gov/10284091/
+- Statsmodels Developers. (n.d.). *RAND Health Insurance Experiment Data* [Historical sample and documentation]. https://www.statsmodels.org/stable/datasets/generated/randhie.html
+
+**Latest supporting references and related research design comparisons:** [Literature review, updated 2026](LITERATURE_REVIEW_2026.md). This is a targeted evidence map, **not** a completed systematic novelty review.
