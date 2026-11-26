@@ -15,11 +15,11 @@
 
 The original RAND HIE randomized insurance arrangements. **This 10-variable analysis extract does not contain the participant/family identifiers, allocation records, timing, assignment strata, or baseline covariate history required to reproduce that experimental design.** The analysis therefore does not estimate an intention-to-treat (ITT) effect, treatment-on-the-treated effect, identified insurance-price elasticity, or effects of present-day health policies.
 
-For archived row `i`, denote physician-visit counts by `Y_i`, logged cost-sharing by `C_i`, recorded disease-burden measure by `D_i`, and observed controls by `X_i`. The primary descriptive target is the conditional utilization mean:
+For archived row $i$, denote physician-visit counts by $Y_i$, logged cost-sharing by $C_i$, recorded disease-burden measure by $D_i$, and observed controls by $X_i$. The primary descriptive target is the conditional utilization mean:
 
-$$
+```math
 m(c,d,x) = \operatorname{E}[Y_i\mid C_i=c,\ D_i=d,\ X_i=x].
-$$
+```
 
 Regression coefficients summarize **model-conditional associations** in this reduced archive. Predictions and model-standardized contrasts must not be interpreted as outcomes under interventions that change insurance coverage.
 
@@ -62,13 +62,13 @@ The loader (`src/health_econ/data.py`) requires all ten original fields, rejects
 
 The record includes **18,396 noninteger values of `disea`**; treating these as discrete diagnoses would alter the observed data. The implementation uses the recorded continuous measure.
 
-Let `C_i = \texttt{lncoins}_i`, `D_i = \texttt{disea}_i`, and define *full-extract* preprocessing constants:
+Let $C_i=\mathtt{lncoins}_i$, $D_i=\mathtt{disea}_i$, and define *full-extract* preprocessing constants:
 
-$$
+```math
 C_i^c = C_i-\overline{C},\qquad
 D_i^z = \frac{D_i-\overline{D}}{s_D},\qquad
 s_D=\sqrt{\frac{1}{N}\sum_{i=1}^{N}(D_i-\overline D)^2}.
-$$
+```
 
 The standard deviation uses `ddof=0`. Centering and standardization are calculated **once on the entire archived dataset** by `prepare_data`; they are reused in model-subset sensitivity analyses. This is an in-sample descriptive modeling convention, not leakage-free preprocessing for the ML holdout (which separately uses the source features).
 
@@ -98,42 +98,42 @@ Source: [`results/data_diagnostics.json`](../results/data_diagnostics.json) and 
 
 The implemented full-sample baseline is:
 
-$$
+```math
 \log \mu_i
 =\beta_0+\beta_1 C_i^c+\beta_2 D_i^z + X_i^\top \gamma,
 \qquad \mu_i=\operatorname{E}[Y_i\mid C_i^c,D_i^z,X_i].
-$$
+```
 
 The main interaction specification is:
 
-$$
+```math
 \log \mu_i
 =\beta_0+\beta_1 C_i^c+\beta_2 D_i^z
 +\beta_3(C_i^cD_i^z)+X_i^\top \gamma.
-$$
+```
 
-Here `X_i` contains `idp`, `lpi`, `fmde`, `physlm`, `hlthg`, `hlthf`, and `hlthp`. The interaction coefficient `β_3` measures the change in the **fitted log-count association** with a one-standard-deviation shift in recorded disease burden, **per one-unit increase in `log(1 + coinsurance percent)`**. It is **not** a direct percentage-point coinsurance interaction, treatment effect, or elasticity.
+Here $X_i$ contains `idp`, `lpi`, `fmde`, `physlm`, `hlthg`, `hlthf`, and `hlthp`. The interaction coefficient $\beta_3$ measures the change in the **fitted log-count association** with a one-standard-deviation shift in recorded disease burden, **per one-unit increase in `log(1 + coinsurance percent)`**. It is **not** a direct percentage-point coinsurance interaction, treatment effect, or elasticity.
 
-The discrete model-conditional count ratio at standardized burden `d` for a one-unit change in logged cost-sharing is:
+The discrete model-conditional count ratio at standardized burden $d$ for a one-unit change in logged cost-sharing is:
 
-$$
+```math
 \operatorname{CR}(d)=\exp\left(\widehat{\beta}_1+d\widehat{\beta}_3\right).
-$$
+```
 
-For any actual change from price `p_0` to `p_1` (both expressed as percentages), the fitted ratio under the log-linear specification is:
+For any actual change from price $p_0$ to $p_1$ (both expressed as percentages), the fitted ratio under the log-linear specification is:
 
-$$
+```math
 \exp\left[
 \{\widehat{\beta}_1+d\widehat{\beta}_3\}
 \{\log(1+p_1)-\log(1+p_0)\}
 \right].
-$$
+```
 
 Both are **conditional model contrasts**, not observed causal responses to changing a person's insurance plan. All estimated interactions are exploratory.
 
 ### 3.2 Poisson GLM and HC3 uncertainty
 
-The Poisson GLM assumes the working conditional variance `Var(Y_i \mid X_i)=\mu_i`. The code fits the baseline and interaction models using the log link and row-level **HC3 sandwich covariance**:
+The Poisson GLM assumes the working conditional variance $\operatorname{Var}(Y_i\mid X_i)=\mu_i$. The code fits the baseline and interaction models using the log link and row-level **HC3 sandwich covariance**:
 
 ```python
 smf.glm(formula, data=df, family=sm.families.Poisson()).fit(cov_type="HC3")
@@ -141,21 +141,21 @@ smf.glm(formula, data=df, family=sm.families.Poisson()).fit(cov_type="HC3")
 
 Poisson quasi-maximum-likelihood interpretation may remain useful under overdispersion if the conditional mean is correctly specified and the appropriate independent observational units are available. **HC3 protects neither against unobserved within-person/family correlation nor against unmeasured confounding or incorrect conditional mean specification.** Since IDs are absent, reported HC3 intervals assume row-level independence that cannot be verified.
 
-For `g(d)=\beta_1+d\beta_3`, the implemented delta-method uncertainty is:
+For $g(d)=\beta_1+d\beta_3$, the implemented delta-method uncertainty is:
 
-$$
+```math
 \widehat{\operatorname{Var}}[\widehat g(d)]
 =\widehat V_{11}+d^2\widehat V_{33}+2d\widehat V_{13},
-$$
+```
 
-where `V` is the fitted HC3 covariance matrix for the two coefficients. The displayed approximate 95% conditional count-ratio interval is:
+where $V$ is the fitted HC3 covariance matrix for the two coefficients. The displayed approximate 95% conditional count-ratio interval is:
 
-$$
+```math
 \left[
 \exp\{\widehat g(d)-1.96\,\operatorname{SE}(\widehat g(d))\},
 \exp\{\widehat g(d)+1.96\,\operatorname{SE}(\widehat g(d))\}
 \right].
-$$
+```
 
 The archived burden percentiles **10, 25, 50, 75, 90** are evaluated in [`heterogeneous_count_ratios.csv`](../results/heterogeneous_count_ratios.csv) and Figure 3. These intervals are **nominal**, not participant-clustered or family-clustered confidence intervals.
 
@@ -163,28 +163,28 @@ The archived burden percentiles **10, 25, 50, 75, 90** are evaluated in [`hetero
 
 To diagnose sensitivity to overdispersion, the implementation fits a **Negative Binomial NB2** regression by BFGS maximum likelihood with the same covariates and interaction:
 
-$$
+```math
 \operatorname{Var}(Y_i\mid X_i)=\mu_i+\alpha\mu_i^2,\qquad \alpha>0.
-$$
+```
 
 The NB2 conditional zero probability is:
 
-$$
+```math
 \Pr(Y_i=0\mid X_i)=(1+\alpha\mu_i)^{-1/\alpha},
-$$
+```
 
-versus `exp(-μ_i)` for Poisson. For each model the reported zero fraction is the **average model-implied zero probability**, not simply the probability at the mean covariate pattern. Pearson dispersion is computed from `sum((Y_i-μ_i)^2/V_i)/(N-k)` using the model-specific variance.
+versus $\exp(-\mu_i)$ for Poisson. For each model the reported zero fraction is the **average model-implied zero probability**, not simply the probability at the mean covariate pattern. Pearson dispersion is computed from $\sum_i (Y_i-\mu_i)^2/V_i\,/\,(N-k)$ using the model-specific variance.
 
 The **NB2 MLE standard errors use the model's default independent-observation covariance**, not HC3. Therefore comparisons between Poisson HC3 and NB2 nominal p-values reflect changes in distributional assumptions **and variance estimation conventions**; they should not be interpreted as a formal test of whether the interaction truly exists.
 
 ### 3.4 Separate any-visit logit
 
-The project additionally fits a binomial-logit GLM (with HC3 covariance) for `A_i=1(Y_i>0)` using the same interaction terms:
+The project additionally fits a binomial-logit GLM (with HC3 covariance) for $A_i=\mathbf{1}\{Y_i>0\}$ using the same interaction terms:
 
-$$
+```math
 \Pr(A_i=1\mid X_i)=\operatorname{logit}^{-1}
 (\delta_0+\delta_1 C_i^c+\delta_2 D_i^z+\delta_3 C_i^cD_i^z+X_i^\top\eta).
-$$
+```
 
 This standalone logit is **not, by itself, a count hurdle model**. Its coefficients concern log-odds of any use, and are not directly comparable in scale with Poisson/NB2 log-count coefficients. A complete hurdle likelihood is implemented separately in `hurdle.py` (`Section 4` below).
 
@@ -210,46 +210,46 @@ Sources: [coefficients](../results/econometric_coefficients.csv) · [model diagn
 
 The project distinguishes the *extensive margin* (any physician visits) from the *intensive positive-count distribution* (how many visits appear among rows with at least one visit). This distinction is **statistical**, not a demonstrated sequential behavioral decision by patients.
 
-Let `π_i = P(Y_i>0|X_i)`. The code estimates a binomial occurrence logit using the complete sample and a **zero-truncated Negative Binomial (NB2, p=2)** likelihood using `Y_i>0` rows. The latter is fit through `statsmodels.discrete.truncated_model.TruncatedLFNegativeBinomialP` with `truncation=0`.
+Let $\pi_i=\Pr(Y_i>0\mid X_i)$. The code estimates a binomial occurrence logit using the complete sample and a **zero-truncated Negative Binomial (NB2, p=2)** likelihood using $Y_i>0$ rows. The latter is fit through `statsmodels.discrete.truncated_model.TruncatedLFNegativeBinomialP` with `truncation=0`.
 
-For positive integer `y`, let `f_{NB2}(y;\mu_i,\alpha)` denote an untruncated NB2 probability, and let `p_{0i}=(1+\alpha\mu_i)^{-1/\alpha}`. The hurdle probability mass is:
+For positive integer $y$, let $f_{\mathrm{NB2}}(y;\mu_i,\alpha)$ denote an untruncated NB2 probability, and let $p_{0i}=(1+\alpha\mu_i)^{-1/\alpha}$. The hurdle probability mass is:
 
-$$
+```math
 \Pr(Y_i=y\mid X_i)=
 \begin{cases}
 1-\pi_i, & y=0,\\[3pt]
 \pi_i\,\dfrac{f_{\mathrm{NB2}}(y;\mu_i,\alpha)}{1-p_{0i}},
  & y=1,2,\ldots
 \end{cases}
-$$
+```
 
-with `π_i = logit^{-1}(X_i^\top δ)` and `μ_i=exp(X_i^\top θ)`. The two components have distinct parameter vectors and are estimated on the applicable complete and positive-count subsets:
+with $\pi_i=\operatorname{logit}^{-1}(X_i^\top\delta)$ and $\mu_i=\exp(X_i^\top\theta)$. The two components have distinct parameter vectors and are estimated on the applicable complete and positive-count subsets:
 
-$$
+```math
 \ell_{\mathrm{hurdle}}
 =\sum_i\left[
 1(Y_i=0)\log(1-\pi_i)
 +1(Y_i>0)\left\{\log\pi_i+\log f_{\mathrm{NB2}}(Y_i;\mu_i,\alpha)-\log(1-p_{0i})\right\}
 \right].
-$$
+```
 
 The software's combined log-likelihood is the sum of the fitted **occurrence** and **positive-count truncated** log-likelihoods. Its reported information criterion counts parameters in both components:
 
-$$
+```math
 \operatorname{AIC}_{\mathrm{hurdle}}
-=-2\left(\ell_{\mathrm{logit}}+\ell_{\mathrm{truncated\ NB2}}\right)
+=-2\left(\ell_{\mathrm{logit}}+\ell_{\mathrm{truncNB2}}\right)
 +2(k_{\mathrm{logit}}+k_{\mathrm{truncated\ NB2}}).
-$$
+```
 
 The conditional positive-use expectation and total hurdle expectation are:
 
-$$
+```math
 \operatorname{E}[Y_i\mid Y_i>0,X_i]
 =\frac{\mu_i}{1-(1+\alpha\mu_i)^{-1/\alpha}},
 \qquad
 \operatorname{E}[Y_i\mid X_i]
 =\pi_i\,\operatorname{E}[Y_i\mid Y_i>0,X_i].
-$$
+```
 
 The implementation obtains the truncated conditional positive mean through the statsmodels prediction interface and multiplies it by the occurrence probability. **In-sample reproduction of the observed zero fraction follows largely from the fitted occurrence intercept; it is not out-of-sample validation or proof of a structural two-decision process.**
 
@@ -275,28 +275,28 @@ Two conditional-mean models with identical non-IDP records and remaining control
 
 **Continuous logged cost sharing:**
 
-$$
+```math
 \log\mu_i=a+b_1C_i^c+b_2D_i^z
 +b_3 C_i^cD_i^z+W_i^\top\lambda.
-$$
+```
 
 **Categorical insurance-price levels (reference: 0%):**
 
-$$
+```math
 \log\mu_i=a+b_DD_i^z+
 \sum_{p\in\{25,50,95\}}
 \left[b_p\,1(P_i=p)+h_p\,1(P_i=p)D_i^z\right]
 +W_i^\top\lambda.
-$$
+```
 
-Here `W_i` is the original control list **without `idp`**. Both specifications are estimated using Poisson HC3 and NB2 MLE. The categorical interactions are not interpreted as effects of randomized insurance transitions.
+Here $W_i$ is the original control list **without `idp`**. Both specifications are estimated using Poisson HC3 and NB2 MLE. The categorical interactions are not interpreted as effects of randomized insurance transitions.
 
-For `k` fitted coefficients, full-sample model likelihood `ℓ` and sample size `n`, the code computes:
+For $k$ fitted coefficients, full-sample model likelihood $\ell$ and sample size $n$, the code computes:
 
-$$
+```math
 \operatorname{AIC}=-2\ell+2k,\qquad
 \operatorname{BIC}=-2\ell+k\log n.
-$$
+```
 
 | Same **14,941** non-IDP rows | AIC | BIC |
 |---|---:|---:|
@@ -315,9 +315,9 @@ Source: [price-form comparisons](../results/price_functional_form_comparisons.cs
 
 The implementation refits the primary interaction specification across three analysis samples:
 
-1. **Full extract:** `n=20,190`.
-2. **Exclude rows above the empirical 99th percentile of utilization:** `n=20,007`; observations at or below the threshold are retained. This is not verified exclusion of a fixed percentage of unique people.
-3. **Non-IDP subset:** `n=14,941`, dropping the now-constant `idp` regressor.
+1. **Full extract:** $n=20{,}190$.
+2. **Exclude rows above the empirical 99th percentile of utilization:** $n=20{,}007$; observations at or below the threshold are retained. This is not verified exclusion of a fixed percentage of unique people.
+3. **Non-IDP subset:** $n=14{,}941$, dropping the now-constant `idp` regressor.
 
 | Sample | Estimator | N | Interaction β | Exploratory p |
 |---|---|---:|---:|---:|
@@ -364,21 +364,21 @@ No nested cross-validation, random hyperparameter search, external validation co
 
 Held-out primary loss is the mean Poisson deviance for positive predictions:
 
-$$
+```math
 D_{\mathrm{P}}(y,\widehat\mu)
 =\frac{2}{n_{\mathrm{test}}}\sum_{i\in\mathrm{test}}
 \left[
 y_i\log\left(\frac{y_i}{\widehat\mu_i}\right)-y_i+\widehat\mu_i
 \right],
-$$
+```
 
-with `0\log(0/\widehat\mu_i)=0` by convention. Code clips predicted means below `10^{-8}` for numerical stability. Supplementary metrics:
+with $0\log(0/\widehat\mu_i)=0$ by convention. Code clips predicted means below $10^{-8}$ for numerical stability. Supplementary metrics:
 
-$$
+```math
 \operatorname{MAE}=\frac{1}{n}\sum_i|y_i-\widehat\mu_i|,
 \qquad
 \operatorname{RMSE}=\sqrt{\frac{1}{n}\sum_i(y_i-\widehat\mu_i)^2}.
-$$
+```
 
 ### 7.4 Verified fixed-holdout results
 
@@ -477,14 +477,14 @@ The GitHub Actions workflow (`Python 3.10` and `3.12`):
 
 A follow-up causal research project would require documented access to the **complete** RAND HIE experimental files (or a separately identified modern natural experiment), including participant and household IDs, assignment unit, randomized benefit allocation, trial dates, baseline burden, attrition and health outcomes.
 
-For randomized insurance assignment `Z_g` at the family/assignment-unit level, a defensible *future* estimand could be the baseline-burden-specific intention-to-treat effect:
+For randomized insurance assignment $Z_g$ at the family/assignment-unit level, a defensible *future* estimand could be the baseline-burden-specific intention-to-treat effect:
 
-$$
+```math
 \tau(d)
 =\operatorname{E}[Y_{ig}(1)-Y_{ig}(0)\mid D^{\mathrm{baseline}}_{ig}=d],
-$$
+```
 
-where `Y(1)` and `Y(0)` are potential outcomes under the assigned plan categories. For multi-arm randomization, prespecify the relevant pair of assignments. Estimation would use the original allocation structure, inference clustered at the randomization unit, attrition checks, and prespecified heterogeneous-effect hypotheses. A price-elasticity estimand would require additional contract-price and behavioral assumptions and cannot be substituted for ITT.
+where $Y(1)$ and $Y(0)$ are potential outcomes under the assigned plan categories. For multi-arm randomization, prespecify the relevant pair of assignments. Estimation would use the original allocation structure, inference clustered at the randomization unit, attrition checks, and prespecified heterogeneous-effect hypotheses. A price-elasticity estimand would require additional contract-price and behavioral assumptions and cannot be substituted for ITT.
 
 **None of these causal analyses has been implemented or produced empirical results in this repository.** The scientific rationale and surrounding literature are described in the [research agenda](RESEARCH_AGENDA.md) and [targeted evidence map](LITERATURE_REVIEW_2026.md).
 
