@@ -5,7 +5,7 @@
 
 ![Data](https://img.shields.io/badge/DATA-REAL%20historical%20RAND%20HIE-12796f) ![N](https://img.shields.io/badge/N-20%2C190-284b70) ![Scope](https://img.shields.io/badge/Scope-Exploratory%20%26%20Noncausal-c6752b) ![License](https://img.shields.io/badge/Code-MIT-blue)
 
-> **Research Question:** Does the recorded cost-sharing–physician utilization relationship vary with chronic disease burden—and do these findings hold up under Negative Binomial Econometrics and nonlinear Machine Learning?
+> **Research Question:** Does the recorded cost-sharing–physician utilization relationship vary with chronic disease burden, and do these findings hold up under Negative Binomial Econometrics and nonlinear Machine Learning?
 
 [![Real-data research CI](https://github.com/muhammad-siddique-research/price-of-care-health-economics/actions/workflows/reproduce.yml/badge.svg)](https://github.com/muhammad-siddique-research/price-of-care-health-economics/actions/workflows/reproduce.yml)
 
