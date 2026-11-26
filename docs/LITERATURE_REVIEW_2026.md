@@ -40,7 +40,7 @@ This integration can help students, hiring committees and research collaborators
 
 The dataset is genuinely historical, but missing participant IDs prevent clustering and verification of independent observations. Unknown experimental allocation and baseline disease timing prevent causal intention-to-treat estimation. No method of sandwich covariance, hurdle fitting, explainability, or model selection restores these variables. A future original article would need an approved full RAND dataset, actual family-level assignment unit, baseline need, follow-up timing, pre-specified estimand and an independently audited systematic literature search.
 
-## References (APA 7th edition)
+## References
 
 Aron-Dine, A., Einav, L., & Finkelstein, A. (2013). The RAND health insurance experiment, three decades later. *Journal of Economic Perspectives, 27*(1), 197–222. https://doi.org/10.1257/jep.27.1.197
 
