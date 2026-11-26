@@ -1,5 +1,5 @@
 # The Price of Care: Chronic Disease Burden, Healthcare Cost-Sharing & Explainable AI
-### Computational Health Economics | Applied Econometrics | Count Data Modeling | Explainable AI/Machine Learning | Reproducible Research
+### Computational Health Economics | Applied Econometrics | Count Data Modeling | Explainable AI/ML | Reproducible Research
 
 ![Data](https://img.shields.io/badge/DATA-REAL%20historical%20RAND%20HIE-12796f) ![N](https://img.shields.io/badge/N-20%2C190-284b70) ![Scope](https://img.shields.io/badge/Scope-Exploratory%20%26%20Noncausal-c6752b) ![License](https://img.shields.io/badge/Code-MIT-blue)
 
