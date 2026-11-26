@@ -18,7 +18,6 @@ def _save(fig, path: Path):
     fig.patch.set_facecolor("white")
     fig.tight_layout(pad=2.1)
     fig.savefig(path, dpi=190, bbox_inches="tight", facecolor="white")
-    fig.savefig(path.with_suffix(".svg"), bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
 

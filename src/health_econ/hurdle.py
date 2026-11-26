@@ -151,7 +151,6 @@ def plot_hurdle_margins(margins: pd.DataFrame, figures: Path):
              "Not a causal price-response curve. Person IDs and assignment unavailable.",
              ha="center", fontsize=10)
     fig.tight_layout()
-    for ext in ("png", "svg"):
-        fig.savefig(figures / f"figure_7_hurdle_decomposition.{ext}",
-                    dpi=180, bbox_inches="tight")
+    fig.savefig(figures / "figure_7_hurdle_decomposition.png",
+                dpi=180, bbox_inches="tight")
     plt.close(fig)

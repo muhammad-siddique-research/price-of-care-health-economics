@@ -133,7 +133,7 @@ Exact machine-generated outputs: [model diagnostics](results/econometric_model_d
 
 ## Eight Reproducible Research Visualizations
 
-All plots were generated from the authentic historical dataset and are saved as both PNG and SVG. Model curves are **fitted associations**, not policy treatment responses.
+All eight plots were generated from the authentic historical dataset and are provided as PNG files. Model curves are **fitted associations**, not policy treatment responses.
 
 | Figure | What it documents |
 |---|---|
@@ -207,7 +207,7 @@ The CLI checks the dataset fingerprint and regenerates Econometric outputs, Mach
 | [data/](data/) | Historical extract, provenance and SHA-256 validation |
 | [src/health_econ/](src/health_econ/) | Data checks, Econometrics, hurdle model, ML and plotting |
 | [results/](results/) | Actual diagnostics, coefficients, sensitivity checks and scores |
-| [figures/](figures/) | Eight reproducible figures in PNG and SVG |
+| [figures/](figures/) | Eight reproducible figures in PNG |
 | [tests/](tests/) | Data, scientific computation and reproducibility checks |
 | [docs/MANUSCRIPT_APA7.md](docs/MANUSCRIPT_APA7.md) | Detailed manuscript and literature context |
 | [docs/METHODS.md](docs/METHODS.md) | Models, equations, identification, split and inference limitations |

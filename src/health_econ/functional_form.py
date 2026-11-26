@@ -121,10 +121,9 @@ def analyze_functional_form(df: pd.DataFrame, results_dir: Path, figures_dir: Pa
         ha="center", fontsize=10
     )
     fig.tight_layout(rect=(0, .035, 1, 1))
-    for ext in ("png", "svg"):
-        fig.savefig(
-            figures_dir / f"figure_8_price_functional_form.{ext}",
-            dpi=180, bbox_inches="tight"
-        )
+    fig.savefig(
+        figures_dir / "figure_8_price_functional_form.png",
+        dpi=180, bbox_inches="tight"
+    )
     plt.close(fig)
     return comparison, margins

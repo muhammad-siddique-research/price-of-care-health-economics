@@ -239,7 +239,7 @@ This project analyzes **authentic historical Health Economics observations**, do
 
 ## 8. Reproducibility and research transparency
 
-All original archived observations in this extract, a SHA-256 source manifest, Python code, unit tests, model diagnostics, sensitivity estimates, ML benchmarking tables, and eight figures (PNG and SVG) are included with the repository. Run `python -m health_econ.cli` to regenerate the results. The data come from the historical RAND research program as distributed through statsmodels. All new results and potential errors in this independent reanalysis remain the responsibility of the project authors, not RAND.
+All original archived observations in this extract, a SHA-256 source manifest, Python code, unit tests, model diagnostics, sensitivity estimates, ML benchmarking tables, and eight figures (PNG) are included with the repository. Run `python -m health_econ.cli` to regenerate the results. The data come from the historical RAND research program as distributed through statsmodels. All new results and potential errors in this independent reanalysis remain the responsibility of the project authors, not RAND.
 
 ## References (APA 7th edition)
 

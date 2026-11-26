@@ -400,7 +400,7 @@ Sources: [holdout metrics](../results/ml_holdout_metrics.csv) · [permutation re
 
 ## 8. Figures and link to implemented outputs
 
-The code produces **eight** research figures, each available in PNG and SVG. Figures are model diagnostics or descriptive displays, **not causal response surfaces**.
+The code produces **eight** research figures, each available as PNG. Figures are model diagnostics or descriptive displays, **not causal response surfaces**.
 
 | Figure | Computational source | Primary content |
 |---|---|---|
