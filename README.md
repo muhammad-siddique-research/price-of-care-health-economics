@@ -221,7 +221,7 @@ The CLI checks the dataset fingerprint and regenerates Econometric outputs, Mach
 
 **Licensing and provenance:** Original code and documentation are MIT-licensed. The historical sample is attributed to the RAND Health Insurance Experiment via statsmodels; these independent analyses and interpretations **must not be attributed to RAND Corporation or the original trial investigators**. Refer to [data provenance](data/README.md) for source documentation.
 
-## Selected Literature
+## Selected References
 
 Aron-Dine, A., Einav, L., & Finkelstein, A. (2013). The RAND health insurance experiment, three decades later. *Journal of Economic Perspectives, 27*(1), 197–222. https://doi.org/10.1257/jep.27.1.197
 
