@@ -1,13 +1,13 @@
 disease_burden_group,coinsurance_pct,standardization_group_n,probability_any_visit,positive_count_mean_among_users,expected_visits_mean,inference_scope
-Lower disease-burden third,0,4998,0.7065351486476895,3.5768389117705546,2.5431238751340035,adjusted historical associations; not causal
-Lower disease-burden third,25,4998,0.595207593072792,3.430547963843217,2.060135149217408,adjusted historical associations; not causal
-Lower disease-burden third,50,4998,0.570486961284586,3.4013418855447095,1.9589231729737302,adjusted historical associations; not causal
-Lower disease-burden third,95,4998,0.5469668191406106,3.374239182082983,1.8642573742961424,adjusted historical associations; not causal
-Middle disease-burden third,0,5109,0.7716818641445855,4.027370430336323,3.1136278434557783,adjusted historical associations; not causal
-Middle disease-burden third,25,5109,0.6760245159942965,3.8609851261846617,2.6170756730353784,adjusted historical associations; not causal
-Middle disease-burden third,50,5109,0.6538493125561669,3.8277313793640317,2.5099053178413966,adjusted historical associations; not causal
-Middle disease-burden third,95,5109,0.6324111189150712,3.796861483414681,2.408479031987562,adjusted historical associations; not causal
-Higher disease-burden third,0,4834,0.8353601001893366,5.064878150991143,4.287132989680135,adjusted historical associations; not causal
-Higher disease-burden third,25,4834,0.761641568504218,4.853589428116326,3.7722515930312137,adjusted historical associations; not causal
-Higher disease-burden third,50,4834,0.7439623047844941,4.811290490991494,3.659154107157968,adjusted historical associations; not causal
-Higher disease-burden third,95,4834,0.7266396821644268,4.772002078943823,3.5511757684470306,adjusted historical associations; not causal
+Lower disease-burden third,0,4998,0.7065351486476895,3.5768389117707193,2.5431238751341265,adjusted historical associations; not causal
+Lower disease-burden third,25,4998,0.595207593072792,3.4305479638433174,2.060135149217476,adjusted historical associations; not causal
+Lower disease-burden third,50,4998,0.5704869612845861,3.401341885544797,1.9589231729737882,adjusted historical associations; not causal
+Lower disease-burden third,95,4998,0.5469668191406108,3.3742391820830604,1.8642573742961919,adjusted historical associations; not causal
+Middle disease-burden third,0,5109,0.7716818641445855,4.027370430336553,3.113627843455963,adjusted historical associations; not causal
+Middle disease-burden third,25,5109,0.6760245159942965,3.8609851261847874,2.6170756730354707,adjusted historical associations; not causal
+Middle disease-burden third,50,5109,0.653849312556167,3.827731379364138,2.5099053178414734,adjusted historical associations; not causal
+Middle disease-burden third,95,5109,0.6324111189150712,3.7968614834147685,2.4084790319876257,adjusted historical associations; not causal
+Higher disease-burden third,0,4834,0.8353601001893366,5.064878150991622,4.287132989680555,adjusted historical associations; not causal
+Higher disease-burden third,25,4834,0.761641568504218,4.853589428116592,3.7722515930314358,adjusted historical associations; not causal
+Higher disease-burden third,50,4834,0.743962304784494,4.811290490991719,3.659154107158154,adjusted historical associations; not causal
+Higher disease-burden third,95,4834,0.7266396821644269,4.77200207894401,3.551175768447185,adjusted historical associations; not causal

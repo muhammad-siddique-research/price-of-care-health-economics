@@ -1,5 +1,5 @@
 model,price_functional_form,observations,converged,n_parameters,aic,bic_information,interpretive_scope
-Poisson HC3,continuous log costshare,14941,True,10,93316.8427315365,93392.96137544501,same-sample descriptive fit; missing trial IDs
-Poisson HC3,categorical coinsurance,14941,True,14,93277.04471522114,93383.61081669305,same-sample descriptive fit; missing trial IDs
-NB2 MLE,continuous log costshare,14941,True,11,65508.92924175924,65592.65975005859,same-sample descriptive fit; missing trial IDs
-NB2 MLE,categorical coinsurance,14941,True,15,65501.65240352335,65615.83036938612,same-sample descriptive fit; missing trial IDs
+Poisson HC3,continuous log costshare,14941,True,10,93316.84273153648,93392.961375445,same-sample descriptive fit; missing trial IDs
+Poisson HC3,categorical coinsurance,14941,True,14,93277.04471522113,93383.61081669304,same-sample descriptive fit; missing trial IDs
+NB2 MLE,continuous log costshare,14941,True,11,65508.92924175925,65592.6597500586,same-sample descriptive fit; missing trial IDs
+NB2 MLE,categorical coinsurance,14941,True,15,65501.652403523345,65615.83036938611,same-sample descriptive fit; missing trial IDs
