@@ -1,7 +1,5 @@
-# THE PRICE OF CARE
-### Cost-Sharing, Chronic Disease Burden, Count Econometrics & Interpretable ML
-
-**Real-data Health Economics Research** · Applied Econometrics · Count Models · Explainable Machine Learning · Reproducible Python
+# The Price of Care: Chronic Disease Burden, Healthcare Cost-Sharing & Explainable AI
+### Computational Health Economics | Applied Econometrics | Count Data Modeling | Explainable AI/Machine Learning | Reproducible Research
 
 ![Data](https://img.shields.io/badge/DATA-REAL%20historical%20RAND%20HIE-12796f) ![N](https://img.shields.io/badge/N-20%2C190-284b70) ![Scope](https://img.shields.io/badge/Scope-Exploratory%20%26%20Noncausal-c6752b) ![License](https://img.shields.io/badge/Code-MIT-blue)
 
@@ -9,8 +7,8 @@
 
 [![Real-data research CI](https://github.com/muhammad-siddique-research/price-of-care-health-economics/actions/workflows/reproduce.yml/badge.svg)](https://github.com/muhammad-siddique-research/price-of-care-health-economics/actions/workflows/reproduce.yml)
 
-**Research Library:** [2026 Evidence Map](docs/LITERATURE_REVIEW_2026.md) · [Detailed Two-Part Methods](docs/METHODS.md) · [APA Manuscript](docs/MANUSCRIPT_APA7.md).  
-**Original Materials:** [APA 7th-style Manuscript](docs/MANUSCRIPT_APA7.md) · [Data Provenance](data/README.md) · [Research Methodology](docs/METHODS.md) · [Research Agenda](docs/RESEARCH_AGENDA.md).
+**Research Library:** [2026 Evidence Map](docs/LITERATURE_REVIEW_2026.md) · [Detailed Two-Part Methods](docs/METHODS.md) · [Manuscript](docs/MANUSCRIPT.md).  
+**Original Materials:** (docs/MANUSCRIPT.md) · [Data Provenance](data/README.md) · [Research Methodology](docs/METHODS.md) · [Research Agenda](docs/RESEARCH_AGENDA.md).
 
 ## Novelty of this Project
 
@@ -88,7 +86,7 @@ flowchart LR
     B --> F[Covariate-pattern holdout]
     F --> G[Regularized Poisson and boosted trees]
     G --> H[Deviance, calibration, permutation importance]
-    E --> I[APA-style research manuscript]
+    E --> I[Research manuscript]
     H --> I
 ```
 
@@ -100,7 +98,7 @@ flowchart LR
 
 **Research Engineering:** Authentic data with a SHA-256 manifest, source attribution, programmatic validation, non-invention of fractional disease-score values, deterministic seeds, reproducible outputs, automated tests, and CI for Python 3.10 and 3.12.
 
-**Research Ethics:** Complete publication-style methodology, reproducibility statement, inconclusive and sensitivity-dependent findings, historical-study limitations, and literature references in APA 7th style.
+**Research Ethics:** Complete publication-style methodology, reproducibility statement, inconclusive and sensitivity-dependent findings, historical-study limitations, and literature references.
 
 ## One-command Reproducibility
 
@@ -129,7 +127,7 @@ src/health_econ/functional_form.py  Plan-support-restricted NB2 comparisons
 src/health_econ/ml.py            Pattern-group split and interpretable ML
 src/health_econ/plots.py         Publication-quality PNG and SVG figures
 src/health_econ/cli.py           Reproducible research runner
-docs/MANUSCRIPT_APA7.md         Article with empirical results and APA references
+docs/MANUSCRIPT.md              Article with empirical results and references
 docs/METHODS.md                 Equations, modeling and identification limits
 docs/RESEARCH_AGENDA.md         Hypotheses, value addition, further research
 docs/LITERATURE_REVIEW_2026.md  Recent primary literature and evidence-gap audit
