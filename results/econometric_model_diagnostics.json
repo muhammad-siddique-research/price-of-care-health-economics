@@ -21,13 +21,13 @@
   },
   "nb2_interaction": {
     "n": 20190,
-    "aic": 86788.5234940284,
+    "aic": 86788.52349402843,
     "converged": true,
-    "pearson_dispersion": 1.4211817101865012,
+    "pearson_dispersion": 1.421181710186528,
     "variance_assumption": "NB2: mean + alpha * mean_squared",
-    "mean_predicted_count": 2.875489231462158,
+    "mean_predicted_count": 2.875489231462126,
     "observed_zero_fraction": 0.31243189697870233,
-    "expected_model_zero_fraction": 0.3196879295894762
+    "expected_model_zero_fraction": 0.31968792958948206
   },
   "any_visit_logit": {
     "n": 20190,
