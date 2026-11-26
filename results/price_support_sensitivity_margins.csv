@@ -1,13 +1,13 @@
 burden_third,coinsurance_pct,standardization_n,nb2_log_price_adjusted_mean,nb2_categorical_price_adjusted_mean,scope
-Low,0,4998,3.0074593802679006,2.633468086937115,descriptive standardized model outputs; not causal
-Low,25,4998,1.8319284333752954,2.096918648938421,descriptive standardized model outputs; not causal
-Low,50,4998,1.6535778363930242,2.034987955717299,descriptive standardized model outputs; not causal
-Low,95,4998,1.502008897858505,1.5627794234657513,descriptive standardized model outputs; not causal
-Middle,0,5109,3.645061618931216,3.1829831047794666,descriptive standardized model outputs; not causal
-Middle,25,5109,2.3178460855237724,2.6559254310477702,descriptive standardized model outputs; not causal
-Middle,50,5109,2.1107094048438677,2.540169497878996,descriptive standardized model outputs; not causal
-Middle,95,5109,1.9331234540349593,2.0032858993942773,descriptive standardized model outputs; not causal
-High,0,4834,5.065978131918531,4.4066741731127586,descriptive standardized model outputs; not causal
-High,25,4834,3.4803505071525946,4.004079289510543,descriptive standardized model outputs; not causal
-High,50,4834,3.2221934961679324,3.726530562834167,descriptive standardized model outputs; not causal
-High,95,4834,2.9978301896578543,3.0903037489824867,descriptive standardized model outputs; not causal
+Low,0,4998,3.007459380267912,2.6334680869371057,descriptive standardized model outputs; not causal
+Low,25,4998,1.8319284333752914,2.0969186489382774,descriptive standardized model outputs; not causal
+Low,50,4998,1.6535778363930191,2.0349879557173662,descriptive standardized model outputs; not causal
+Low,95,4998,1.5020088978584991,1.5627794234656303,descriptive standardized model outputs; not causal
+Middle,0,5109,3.645061618931231,3.1829831047795643,descriptive standardized model outputs; not causal
+Middle,25,5109,2.3178460855237675,2.6559254310475087,descriptive standardized model outputs; not causal
+Middle,50,5109,2.1107094048438606,2.5401694978790665,descriptive standardized model outputs; not causal
+Middle,95,5109,1.933123454034951,2.0032858993941685,descriptive standardized model outputs; not causal
+High,0,4834,5.065978131918552,4.406674173113105,descriptive standardized model outputs; not causal
+High,25,4834,3.480350507152585,4.004079289509862,descriptive standardized model outputs; not causal
+High,50,4834,3.222193496167919,3.7265305628341827,descriptive standardized model outputs; not causal
+High,95,4834,2.997830189657838,3.09030374898241,descriptive standardized model outputs; not causal
